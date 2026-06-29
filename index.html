@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Controle de Gravações</title>
+<meta name="theme-color" content="#0f1115">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gravações">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #0f1115;
+    --surface: #1a1d24;
+    --surface-2: #232733;
+    --border: #2e3340;
+    --text: #e6e8ec;
+    --muted: #9aa0ac;
+    --accent: #6c8cff;
+    --accent-soft: #2a3354;
+    --green: #3ecf8e;
+    --green-soft: #16331f;
+    --amber: #f5b942;
+    --amber-soft: #3a2e10;
+    --red: #ff6b6b;
+    --red-soft: #3a1717;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 18px; margin: 0; display: flex; align-items: center; gap: 8px; }
+  .sync { font-size: 12px; color: var(--muted); padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; white-space: nowrap; }
+  .tabs { display: flex; gap: 4px; margin-left: auto; }
+  .tab {
+    padding: 8px 16px; border-radius: 8px; cursor: pointer;
+    color: var(--muted); border: 1px solid transparent; background: none; font-size: 14px;
+  }
+  .tab:hover { background: var(--surface-2); color: var(--text); }
+  .tab.active { background: var(--accent-soft); color: #fff; border-color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  input, select, textarea {
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 12px; border-radius: 8px; font-size: 16px; font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  input[type="search"] { min-width: 200px; }
+  .btn {
+    background: var(--accent); color: #fff; border: none; padding: 9px 16px;
+    border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+  }
+  .btn:hover { filter: brightness(1.1); }
+  .btn.secondary { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-weight: 500; }
+  .btn.ghost { background: none; border: 1px solid var(--border); color: var(--muted); }
+  .btn.danger { background: var(--red-soft); color: var(--red); border: 1px solid var(--red); }
+  .btn.small { padding: 5px 10px; font-size: 13px; }
+  .stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; flex: 1; min-width: 120px; }
+  .stat .num { font-size: 26px; font-weight: 700; }
+  .stat .lbl { color: var(--muted); font-size: 13px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; margin-bottom: 12px;
+  }
+  .card.gravacao { border-left: 4px solid var(--accent); }
+  .card.roteiro { border-left: 4px solid #c084fc; }
+  .card.roteiro.vazio { border-left-color: var(--border); }
+  .roteiro-resumo { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .roteiro-preview { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 12px; color: var(--muted); font-size: 13px; white-space: pre-wrap; line-height: 1.55; max-height: 96px; overflow: hidden; }
+  .roteiro-meta { color: var(--muted); font-size: 12px; margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .card-head { display: flex; align-items: flex-start; gap: 12px; }
+  .card-head .title { font-size: 16px; font-weight: 600; }
+  .card-head .when { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .card-actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+  .badge.agendada { background: var(--amber-soft); color: var(--amber); }
+  .badge.gravada { background: var(--green-soft); color: var(--green); }
+  .badge.cancelada { background: var(--red-soft); color: var(--red); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .chip {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px;
+    padding: 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .chip.topic { background: var(--accent-soft); border-color: var(--accent); }
+  .section-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin: 12px 0 4px; }
+  .empty { text-align: center; color: var(--muted); padding: 60px 20px; }
+  .empty .big { font-size: 42px; margin-bottom: 8px; }
+  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 12px; }
+  .person-card { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius); padding:16px; display:flex; gap:12px; align-items:flex-start; }
+  .avatar { width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; flex-shrink:0; font-size:17px; }
+  .person-card .info { flex:1; min-width:0; }
+  .person-card .nome { font-weight:600; font-size:15px; }
+  .person-card .meta { color:var(--muted); font-size:13px; word-break:break-word; }
+  .person-card .acts { display:flex; gap:6px; margin-top:12px; }
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none;
+    align-items: flex-start; justify-content: center; z-index: 50; overflow-y: auto; padding: 40px 16px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    width: 100%; max-width: 560px; padding: 24px;
+  }
+  .modal.wide { max-width: 780px; }
+  .modal h2 { margin: 0 0 18px; font-size: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
+  .field input, .field select, .field textarea { width: 100%; }
+  .row { display: flex; gap: 12px; }
+  .row .field { flex: 1; }
+  .add-inline { display: flex; gap: 8px; }
+  .add-inline input { flex: 1; }
+  .people-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+  .people-pick label {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: 13px;
+  }
+  .people-pick label.checked { background: var(--accent-soft); border-color: var(--accent); }
+  .people-pick input { display: none; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  a.link { color: var(--accent); cursor: pointer; text-decoration: none; font-size: 13px; }
+  .topic-tag { display:inline-flex; align-items:center; gap:6px; background: var(--accent-soft); border:1px solid var(--accent); border-radius:20px; padding:4px 10px; font-size:13px; margin:0 6px 6px 0;}
+  .topic-tag button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:14px; line-height:1; padding:0; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎬 Controle de Gravações</h1>
+  <span id="sync" class="sync">conectando…</span>
+  <div class="tabs">
+    <button class="tab active" data-view="roteiro">📝 Roteiro</button>
+    <button class="tab" data-view="agenda">📅 Agenda</button>
+    <button class="tab" data-view="pessoas">👥 Pessoas</button>
+  </div>
+</header>
+
+<main>
+  <!-- ===== AGENDA ===== -->
+  <div id="view-agenda" style="display:none">
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <button class="btn" onclick="openGravacao()">+ Nova gravação</button>
+      <input type="search" id="busca" placeholder="Buscar por título, tópico ou pessoa..." oninput="renderAgenda()">
+      <select id="filtroStatus" onchange="renderAgenda()">
+        <option value="">Todos os status</option>
+        <option value="agendada">Agendadas</option>
+        <option value="gravada">Gravadas</option>
+        <option value="cancelada">Canceladas</option>
+      </select>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="btn ghost small" onclick="exportData()">⬇ Backup</button>
+        <button class="btn ghost small" onclick="document.getElementById('importFile').click()">⬆ Importar</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
+    <div id="lista-gravacoes"></div>
+  </div>
+
+  <!-- ===== ROTEIRO ===== -->
+  <div id="view-roteiro">
+    <div class="toolbar">
+      <input type="search" id="buscaRoteiro" placeholder="Buscar gravação pelo título..." oninput="renderRoteiros()">
+    </div>
+    <div id="lista-roteiros"></div>
+  </div>
+
+  <!-- ===== PESSOAS ===== -->
+  <div id="view-pessoas" style="display:none">
+    <div class="toolbar">
+      <button class="btn" onclick="openPessoa()">+ Nova pessoa</button>
+      <input type="search" id="buscaPessoa" placeholder="Buscar pessoa por nome ou função..." oninput="renderPessoas()">
+    </div>
+    <div id="lista-pessoas"></div>
+  </div>
+</main>
+
+<!-- ===== MODAL GRAVAÇÃO ===== -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Nova gravação</h2>
+    <input type="hidden" id="gId">
+    <div class="field">
+      <label>Título da gravação</label>
+      <input type="text" id="gTitulo" placeholder="Ex: Episódio 12 — Entrevista">
+    </div>
+    <div class="row">
+      <div class="field"><label>Data</label><input type="date" id="gData"></div>
+      <div class="field"><label>Hora</label><input type="time" id="gHora"></div>
+      <div class="field"><label>Status</label>
+        <select id="gStatus">
+          <option value="agendada">Agendada</option>
+          <option value="gravada">Gravada</option>
+          <option value="cancelada">Cancelada</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Tópicos de gravação</label>
+      <div id="topicTags"></div>
+      <div class="add-inline">
+        <input type="text" id="topicInput" placeholder="Digite um tópico e Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addTopic();}">
+        <button type="button" class="btn secondary" onclick="addTopic()">Adicionar</button>
+      </div>
+      <div class="hint">Liste os assuntos/pautas que serão gravados nesta sessão.</div>
+    </div>
+
+    <div class="field">
+      <label>Pessoas marcadas</label>
+      <div class="people-pick" id="peoplePick"></div>
+      <div class="hint" id="noPeopleHint" style="display:none">Nenhuma pessoa cadastrada ainda. Vá na aba <b>Pessoas</b> para adicionar.</div>
+    </div>
+
+    <div class="field">
+      <label>Observações</label>
+      <textarea id="gNotas" rows="2" placeholder="Local, equipamento, links..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn danger" id="btnExcluir" onclick="excluirGravacao()" style="margin-right:auto; display:none">Excluir</button>
+      <button class="btn secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="salvarGravacao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL PESSOA ===== -->
+<div class="overlay" id="overlayPessoa">
+  <div class="modal">
+    <h2 id="modalPessoaTitle">Nova pessoa</h2>
+    <input type="hidden" id="pId">
+    <div class="field">
+      <label>Nome</label>
+      <input type="text" id="pNome" placeholder="Ex: Maria Silva" onkeydown="if(event.key==='Enter')salvarPessoa()">
+    </div>
+    <div class="row">
+      <div class="field" style="flex:2"><label>Função / papel</label>
+        <input type="text" id="pPapel" placeholder="Ex: apresentadora, convidado, câmera">
+      </div>
+      <div class="field" style="flex:0 0 70px"><label>Cor</label>
+        <input type="color" id="pCor" value="#6c8cff" style="width:100%; height:38px; padding:4px;">
+      </div>
+    </div>
+    <div class="field">
+      <label>Telefone de contato</label>
+      <input type="tel" id="pTelefone" placeholder="(11) 91234-5678">
+    </div>
+    <div class="field">
+      <label>Observações <span style="color:var(--muted)">(opcional)</span></label>
+      <textarea id="pNotas" rows="2" placeholder="Ex: disponível só de manhã, alergia a..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn danger" id="btnExcluirPessoa" onclick="excluirPessoa()" style="margin-right:auto; display:none">Excluir</button>
+      <button class="btn secondary" onclick="closePessoa()">Cancelar</button>
+      <button class="btn" onclick="salvarPessoa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ROTEIRO ===== -->
+<div class="overlay" id="overlayRoteiro">
+  <div class="modal wide">
+    <h2>📝 Roteiro — <span id="roteiroTitulo" style="color:var(--accent)"></span></h2>
+    <input type="hidden" id="rId">
+    <div class="field">
+      <textarea id="rTexto" rows="18" oninput="atualizaContadorRoteiro()" placeholder="Escreva aqui o roteiro da gravação...
+
+Exemplo:
+• Abertura (00:00) — saudação e tema do dia
+• Bloco 1 — ...
+• Bloco 2 — ...
+• Encerramento — chamada para próxima gravação" style="width:100%; line-height:1.6; resize:vertical;"></textarea>
+      <div class="hint"><span id="rContador">0</span> caracteres</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeRoteiro()">Fechar</button>
+      <button class="btn" onclick="salvarRoteiro()">Salvar roteiro</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let db = { gravacoes: [], pessoas: [] };
+let draftTopics = [];
+let accessCode = localStorage.getItem('cg-code') || '';
+
+/* ---------- Sincronização com o servidor ---------- */
+function authHeaders(extra) { return Object.assign({ 'x-access-code': accessCode }, extra || {}); }
+function normalize(d) {
+  return { gravacoes: Array.isArray(d && d.gravacoes) ? d.gravacoes : [],
+           pessoas:   Array.isArray(d && d.pessoas)   ? d.pessoas   : [] };
+}
+function setSync(state) {
+  const el = document.getElementById('sync');
+  const map = {
+    ok:        ['✓ Sincronizado', 'var(--green)'],
+    salvando:  ['Salvando…',       'var(--amber)'],
+    erro:      ['Erro ao salvar',  'var(--red)'],
+    off:       ['Sem conexão',     'var(--muted)'],
+    bloqueado: ['Código necessário','var(--red)'],
+    conectando:['Conectando…',     'var(--muted)']
+  };
+  const [txt, cor] = map[state] || map.conectando;
+  el.textContent = txt; el.style.color = cor; el.style.borderColor = cor;
+}
+function pedirCodigo(msg) {
+  const c = window.prompt(msg || 'Digite o código de acesso do app:');
+  if (c === null) return false;
+  accessCode = c.trim();
+  localStorage.setItem('cg-code', accessCode);
+  return true;
+}
+
+async function carregarDoServidor() {
+  setSync('conectando');
+  while (true) {
+    let r;
+    try { r = await fetch('/api/data', { headers: authHeaders() }); }
+    catch (e) { setSync('off'); return false; }
+    if (r.status === 401) {
+      if (!pedirCodigo('Código incorreto ou necessário. Digite o código de acesso:')) { setSync('bloqueado'); return false; }
+      continue;
+    }
+    if (!r.ok) { setSync('erro'); return false; }
+    db = normalize(await r.json());
+    setSync('ok');
+    return true;
+  }
+}
+
+let pushTimer = null, enviando = false, pendente = false;
+function save() {
+  pendente = true;
+  setSync('salvando');
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(enviarAoServidor, 600);
+}
+async function enviarAoServidor() {
+  if (!pendente || enviando) return;
+  enviando = true; pendente = false;
+  try {
+    const r = await fetch('/api/data', {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(db)
+    });
+    setSync(r.ok ? 'ok' : 'erro');
+  } catch (e) { setSync('off'); }
+  enviando = false;
+  if (pendente) enviarAoServidor();
+}
+
+async function sincronizarBaixar() {
+  if (document.querySelector('.overlay.open')) return; // não atrapalha edição
+  if (enviando || pendente) return;
+  let r;
+  try { r = await fetch('/api/data', { headers: authHeaders() }); }
+  catch (e) { setSync('off'); return; }
+  if (!r.ok) { return; }
+  const novo = normalize(await r.json());
+  if (JSON.stringify(novo) !== JSON.stringify(db)) {
+    db = novo;
+    renderTudo();
+  }
+  setSync('ok');
+}
+function renderTudo() { renderAgenda(); renderRoteiros(); renderPessoas(); }
+function uid() { return Date.now().toString(36) + Math.floor(performance.now()).toString(36) + (db.gravacoes.length+db.pessoas.length); }
+
+/* ---------- Navegação ---------- */
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  const v = t.dataset.view;
+  document.getElementById('view-agenda').style.display = v==='agenda' ? '' : 'none';
+  document.getElementById('view-roteiro').style.display = v==='roteiro' ? '' : 'none';
+  document.getElementById('view-pessoas').style.display = v==='pessoas' ? '' : 'none';
+  if (v==='pessoas') renderPessoas();
+  if (v==='roteiro') renderRoteiros();
+});
+
+/* ---------- Pessoas ---------- */
+const CORES = ['#6c8cff','#3ecf8e','#f5b942','#ff6b6b','#c084fc','#22d3ee','#fb7185','#a3e635'];
+function iniciais(nome) {
+  const partes = nome.trim().split(/\s+/);
+  return ((partes[0]||'')[0] || '?').toUpperCase() + (partes.length>1 ? (partes[partes.length-1][0]||'').toUpperCase() : '');
+}
+function soDigitos(t){ return (t||'').replace(/\D/g,''); }
+function waLink(tel){
+  let d = soDigitos(tel);
+  if (!d) return '';
+  if (d.length <= 11 && !d.startsWith('55')) d = '55' + d;
+  return 'https://wa.me/' + d;
+}
+function openPessoa(id) {
+  const ov = document.getElementById('overlayPessoa');
+  if (id) {
+    const p = db.pessoas.find(x => x.id===id);
+    document.getElementById('modalPessoaTitle').textContent = 'Editar pessoa';
+    document.getElementById('pId').value = p.id;
+    document.getElementById('pNome').value = p.nome;
+    document.getElementById('pPapel').value = p.papel || '';
+    document.getElementById('pCor').value = p.cor || '#6c8cff';
+    document.getElementById('pTelefone').value = p.telefone || p.contato || '';
+    document.getElementById('pNotas').value = p.notas || '';
+    document.getElementById('btnExcluirPessoa').style.display = '';
+  } else {
+    document.getElementById('modalPessoaTitle').textContent = 'Nova pessoa';
+    document.getElementById('pId').value = '';
+    document.getElementById('pNome').value = '';
+    document.getElementById('pPapel').value = '';
+    document.getElementById('pCor').value = CORES[db.pessoas.length % CORES.length];
+    document.getElementById('pTelefone').value = '';
+    document.getElementById('pNotas').value = '';
+    document.getElementById('btnExcluirPessoa').style.display = 'none';
+  }
+  ov.classList.add('open');
+  setTimeout(() => document.getElementById('pNome').focus(), 50);
+}
+function closePessoa() { document.getElementById('overlayPessoa').classList.remove('open'); }
+document.getElementById('overlayPessoa').addEventListener('click', e => { if (e.target.id==='overlayPessoa') closePessoa(); });
+
+function salvarPessoa() {
+  const nome = document.getElementById('pNome').value.trim();
+  if (!nome) { alert('Digite o nome da pessoa.'); return; }
+  const obj = {
+    nome,
+    papel: document.getElementById('pPapel').value.trim(),
+    cor: document.getElementById('pCor').value,
+    telefone: document.getElementById('pTelefone').value.trim(),
+    notas: document.getElementById('pNotas').value.trim()
+  };
+  const id = document.getElementById('pId').value;
+  if (id) { Object.assign(db.pessoas.find(x=>x.id===id), obj); }
+  else { obj.id = uid(); db.pessoas.push(obj); }
+  save(); closePessoa(); renderPessoas();
+}
+function excluirPessoa() {
+  const id = document.getElementById('pId').value;
+  const usados = db.gravacoes.filter(g => (g.pessoas||[]).includes(id)).length;
+  let msg = 'Excluir esta pessoa?';
+  if (usados) msg += `\nEla está marcada em ${usados} gravação(ões) — será removida delas também.`;
+  if (!confirm(msg)) return;
+  db.pessoas = db.pessoas.filter(p => p.id !== id);
+  db.gravacoes.forEach(g => g.pessoas = (g.pessoas||[]).filter(pid => pid !== id));
+  save(); closePessoa(); renderPessoas();
+}
+function renderPessoas() {
+  const el = document.getElementById('lista-pessoas');
+  const busca = (document.getElementById('buscaPessoa').value || '').toLowerCase();
+  if (!db.pessoas.length) {
+    el.innerHTML = '<div class="empty"><div class="big">👥</div>Nenhuma pessoa cadastrada.<br>Clique em <b>+ Nova pessoa</b> para começar.</div>';
+    return;
+  }
+  let list = db.pessoas.slice().sort((a,b)=>a.nome.localeCompare(b.nome));
+  if (busca) list = list.filter(p => (p.nome+' '+(p.papel||'')).toLowerCase().includes(busca));
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="big">🔍</div>Nenhuma pessoa encontrada.</div>'; return; }
+  el.innerHTML = '<div class="people-grid">' + list.map(p => {
+    const count = db.gravacoes.filter(g => (g.pessoas||[]).includes(p.id)).length;
+    return `<div class="person-card">
+      <div class="avatar" style="background:${p.cor}">${esc(iniciais(p.nome))}</div>
+      <div class="info">
+        <div class="nome">${esc(p.nome)}</div>
+        ${p.papel?`<div class="meta">${esc(p.papel)}</div>`:''}
+        ${(p.telefone||p.contato)?`<div class="meta">📞 <a class="link" href="tel:${esc(soDigitos(p.telefone||p.contato))}">${esc(p.telefone||p.contato)}</a> <a class="link" style="color:var(--green)" href="${waLink(p.telefone||p.contato)}" target="_blank" rel="noopener" title="Abrir no WhatsApp">WhatsApp ↗</a></div>`:''}
+        <div class="meta">🎬 ${count} gravação(ões)</div>
+        <div class="acts">
+          <button class="btn secondary small" onclick="openPessoa('${p.id}')">Editar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+/* ---------- Tópicos (no modal) ---------- */
+function addTopic() {
+  const inp = document.getElementById('topicInput');
+  const v = inp.value.trim();
+  if (!v) return;
+  draftTopics.push(v); inp.value = ''; renderTopicTags();
+}
+function removeTopic(i) { draftTopics.splice(i,1); renderTopicTags(); }
+function renderTopicTags() {
+  document.getElementById('topicTags').innerHTML = draftTopics.map((t,i) =>
+    `<span class="topic-tag">${esc(t)} <button onclick="removeTopic(${i})">✕</button></span>`).join('');
+}
+
+/* ---------- Modal gravação ---------- */
+function openGravacao(id) {
+  const ov = document.getElementById('overlay');
+  const peoplePick = document.getElementById('peoplePick');
+  peoplePick.innerHTML = db.pessoas.map(p =>
+    `<label data-id="${p.id}"><input type="checkbox" value="${p.id}" onchange="this.parentElement.classList.toggle('checked', this.checked)"><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.cor}"></span>${esc(p.nome)}</label>`
+  ).join('');
+  document.getElementById('noPeopleHint').style.display = db.pessoas.length ? 'none' : '';
+
+  if (id) {
+    const g = db.gravacoes.find(x => x.id===id);
+    document.getElementById('modalTitle').textContent = 'Editar gravação';
+    document.getElementById('gId').value = g.id;
+    document.getElementById('gTitulo').value = g.titulo;
+    document.getElementById('gData').value = g.data || '';
+    document.getElementById('gHora').value = g.hora || '';
+    document.getElementById('gStatus').value = g.status;
+    document.getElementById('gNotas').value = g.notas || '';
+    draftTopics = [...(g.topicos||[])];
+    (g.pessoas||[]).forEach(pid => {
+      const cb = peoplePick.querySelector(`input[value="${pid}"]`);
+      if (cb) { cb.checked = true; cb.parentElement.classList.add('checked'); }
+    });
+    document.getElementById('btnExcluir').style.display = '';
+  } else {
+    document.getElementById('modalTitle').textContent = 'Nova gravação';
+    document.getElementById('gId').value = '';
+    document.getElementById('gTitulo').value = '';
+    document.getElementById('gData').value = '';
+    document.getElementById('gHora').value = '';
+    document.getElementById('gStatus').value = 'agendada';
+    document.getElementById('gNotas').value = '';
+    draftTopics = [];
+    document.getElementById('btnExcluir').style.display = 'none';
+  }
+  renderTopicTags();
+  ov.classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click', e => { if (e.target.id==='overlay') closeModal(); });
+
+function salvarGravacao() {
+  const titulo = document.getElementById('gTitulo').value.trim();
+  if (!titulo) { alert('Digite o título da gravação.'); return; }
+  const pessoas = [...document.querySelectorAll('#peoplePick input:checked')].map(c => c.value);
+  const obj = {
+    titulo,
+    data: document.getElementById('gData').value,
+    hora: document.getElementById('gHora').value,
+    status: document.getElementById('gStatus').value,
+    notas: document.getElementById('gNotas').value.trim(),
+    topicos: [...draftTopics],
+    pessoas
+  };
+  const id = document.getElementById('gId').value;
+  if (id) { Object.assign(db.gravacoes.find(x=>x.id===id), obj); }
+  else { obj.id = uid(); db.gravacoes.push(obj); }
+  save(); closeModal(); renderAgenda();
+}
+function excluirGravacao() {
+  const id = document.getElementById('gId').value;
+  if (!confirm('Excluir esta gravação?')) return;
+  db.gravacoes = db.gravacoes.filter(x => x.id !== id);
+  save(); closeModal(); renderAgenda();
+}
+
+/* ---------- Roteiro ---------- */
+function openRoteiro(id) {
+  const g = db.gravacoes.find(x => x.id===id);
+  if (!g) return;
+  document.getElementById('rId').value = g.id;
+  document.getElementById('roteiroTitulo').textContent = g.titulo;
+  document.getElementById('rTexto').value = g.roteiro || '';
+  atualizaContadorRoteiro();
+  document.getElementById('overlayRoteiro').classList.add('open');
+  setTimeout(() => document.getElementById('rTexto').focus(), 50);
+}
+function closeRoteiro() { document.getElementById('overlayRoteiro').classList.remove('open'); }
+function salvarRoteiro() {
+  const id = document.getElementById('rId').value;
+  const g = db.gravacoes.find(x => x.id===id);
+  if (g) { g.roteiro = document.getElementById('rTexto').value; save(); renderAgenda(); renderRoteiros(); }
+  closeRoteiro();
+}
+function renderRoteiros() {
+  const el = document.getElementById('lista-roteiros');
+  if (!el) return;
+  const busca = (document.getElementById('buscaRoteiro').value || '').toLowerCase();
+  if (!db.gravacoes.length) {
+    el.innerHTML = '<div class="empty"><div class="big">📝</div>Nenhuma gravação ainda.<br>Crie uma gravação na aba <b>Agenda</b> para escrever o roteiro dela.</div>';
+    return;
+  }
+  const comRoteiro = db.gravacoes.filter(g => g.roteiro && g.roteiro.trim()).length;
+  const resumo = `<div class="roteiro-resumo">📝 ${comRoteiro} de ${db.gravacoes.length} gravação(ões) com roteiro pronto</div>`;
+  let list = db.gravacoes.slice().sort((a,b) => {
+    if (!a.data && !b.data) return 0;
+    if (!a.data) return 1;
+    if (!b.data) return -1;
+    return (a.data+a.hora).localeCompare(b.data+b.hora);
+  });
+  if (busca) list = list.filter(g => g.titulo.toLowerCase().includes(busca));
+  if (!list.length) { el.innerHTML = resumo + '<div class="empty"><div class="big">🔍</div>Nenhuma gravação encontrada.</div>'; return; }
+  el.innerHTML = resumo + list.map(g => {
+    const txt = (g.roteiro || '').trim();
+    const tem = !!txt;
+    const palavras = tem ? txt.split(/\s+/).length : 0;
+    const preview = tem ? esc(txt.slice(0,220)) + (txt.length>220?'…':'') : '';
+    return `<div class="card roteiro${tem?'':' vazio'}">
+      <div class="card-head">
+        <div style="flex:1; min-width:0;">
+          <div class="title">${esc(g.titulo)}</div>
+          <div class="when">📅 ${fmtData(g.data,g.hora)}</div>
+        </div>
+        <div class="card-actions">
+          ${tem
+            ? '<span class="badge gravada">Roteiro pronto</span>'
+            : '<span class="badge agendada">A escrever</span>'}
+          <button class="btn small" onclick="openRoteiro('${g.id}')">${tem?'Abrir / editar':'Escrever'}</button>
+        </div>
+      </div>
+      ${tem
+        ? `<div class="roteiro-preview">${preview}</div><div class="roteiro-meta"><span>📄 ${palavras} palavra(s)</span><span>✍️ ${txt.length} caracteres</span></div>`
+        : '<div class="roteiro-preview" style="font-style:italic;">Ainda sem texto — clique em “Escrever” para começar.</div>'}
+    </div>`;
+  }).join('');
+}
+function atualizaContadorRoteiro() {
+  document.getElementById('rContador').textContent = document.getElementById('rTexto').value.length;
+}
+document.getElementById('overlayRoteiro').addEventListener('click', e => { if (e.target.id==='overlayRoteiro') closeRoteiro(); });
+
+/* ---------- Render agenda ---------- */
+function renderStats() {
+  const total = db.gravacoes.length;
+  const ag = db.gravacoes.filter(g=>g.status==='agendada').length;
+  const gr = db.gravacoes.filter(g=>g.status==='gravada').length;
+  const hoje = new Date().toISOString().slice(0,10);
+  const futuras = db.gravacoes.filter(g=>g.status==='agendada' && g.data>=hoje).length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${total}</div><div class="lbl">Total</div></div>
+    <div class="stat"><div class="num" style="color:var(--amber)">${ag}</div><div class="lbl">Agendadas</div></div>
+    <div class="stat"><div class="num" style="color:var(--green)">${gr}</div><div class="lbl">Gravadas</div></div>
+    <div class="stat"><div class="num" style="color:var(--accent)">${futuras}</div><div class="lbl">Próximas</div></div>`;
+}
+function fmtData(d, h) {
+  if (!d) return 'Sem data definida';
+  const [y,m,day] = d.split('-');
+  const dias = ['dom','seg','ter','qua','qui','sex','sáb'];
+  const dt = new Date(d+'T00:00:00');
+  let s = `${dias[dt.getDay()]}, ${day}/${m}/${y}`;
+  if (h) s += ` às ${h}`;
+  return s;
+}
+function pessoaById(id){ return db.pessoas.find(p=>p.id===id); }
+
+function renderAgenda() {
+  renderStats();
+  const busca = document.getElementById('busca').value.toLowerCase();
+  const fStatus = document.getElementById('filtroStatus').value;
+  let list = db.gravacoes.slice();
+  if (fStatus) list = list.filter(g=>g.status===fStatus);
+  if (busca) list = list.filter(g => {
+    const pnames = (g.pessoas||[]).map(id => (pessoaById(id)||{}).nome||'').join(' ');
+    return (g.titulo+' '+(g.topicos||[]).join(' ')+' '+pnames).toLowerCase().includes(busca);
+  });
+  list.sort((a,b) => {
+    if (!a.data && !b.data) return 0;
+    if (!a.data) return 1;
+    if (!b.data) return -1;
+    return (a.data+a.hora).localeCompare(b.data+b.hora);
+  });
+  const el = document.getElementById('lista-gravacoes');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="big">🎬</div>Nenhuma gravação ainda.<br>Clique em <b>+ Nova gravação</b> para começar.</div>';
+    return;
+  }
+  el.innerHTML = list.map(g => {
+    const topics = (g.topicos||[]).map(t=>`<span class="chip topic">🎬 ${esc(t)}</span>`).join('');
+    const people = (g.pessoas||[]).map(id => {
+      const p = pessoaById(id); if (!p) return '';
+      return `<span class="chip"><span class="dot" style="background:${p.cor}"></span>${esc(p.nome)}</span>`;
+    }).join('');
+    return `<div class="card gravacao">
+      <div class="card-head">
+        <div>
+          <div class="title">${esc(g.titulo)}</div>
+          <div class="when">📅 ${fmtData(g.data,g.hora)}</div>
+        </div>
+        <div class="card-actions">
+          <span class="badge ${g.status}">${g.status[0].toUpperCase()+g.status.slice(1)}</span>
+          <button class="btn secondary small" onclick="openRoteiro('${g.id}')">📝 Roteiro${g.roteiro && g.roteiro.trim() ? ' ✓' : ''}</button>
+          <button class="btn secondary small" onclick="openGravacao('${g.id}')">Editar</button>
+        </div>
+      </div>
+      ${g.notas?`<div style="color:var(--muted);font-size:13px;margin-top:8px">${esc(g.notas)}</div>`:''}
+      ${topics?`<div class="section-label">Tópicos</div><div class="chips">${topics}</div>`:''}
+      ${people?`<div class="section-label">Pessoas</div><div class="chips">${people}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ---------- Backup ---------- */
+function exportData() {
+  const blob = new Blob([JSON.stringify(db,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gravacoes-backup.json';
+  a.click();
+}
+function importData(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d.gravacoes || !d.pessoas) throw 0;
+      if (!confirm('Isso vai SUBSTITUIR todos os dados (inclusive os da outra pessoa) pelos do arquivo. Continuar?')) return;
+      db = normalize(d); save(); renderTudo();
+      alert('Dados importados com sucesso!');
+    } catch(e){ alert('Arquivo inválido.'); }
+  };
+  r.readAsText(f);
+  ev.target.value = '';
+}
+
+function esc(s){ return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- Init ---------- */
+(async function boot() {
+  const ok = await carregarDoServidor();
+  renderTudo();
+  if (ok) setInterval(sincronizarBaixar, 7000);
+})();
+</script>
+</body>
+</html>

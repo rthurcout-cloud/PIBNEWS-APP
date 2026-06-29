@@ -1,0 +1,9 @@
+{
+  "name": "controle-gravacoes-online",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App de controle de gravações com agenda, roteiros e pessoas, com dados compartilhados via Vercel KV.",
+  "engines": {
+    "node": "20.x"
+  }
+}
