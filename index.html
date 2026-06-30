@@ -72,6 +72,15 @@
   }
   .tab:hover { background: var(--surface-2); color: var(--text); }
   .tab.active { background: var(--accent-soft); color: #fff; border-color: var(--accent); }
+  .home-menu { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 760px; margin: 7vh auto 0; }
+  .home-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; color: var(--text); cursor: pointer; font-size: 18px; font-weight: 600; transition: transform .12s, border-color .12s, background .12s; }
+  .home-btn:hover { border-color: var(--accent); transform: translateY(-3px); background: var(--surface-2); }
+  .home-btn .ico { font-size: 42px; line-height: 1; }
+  @media (max-width: 560px) {
+    .home-menu { grid-template-columns: 1fr; gap: 12px; margin-top: 3vh; }
+    .home-btn { flex-direction: row; justify-content: flex-start; gap: 18px; padding: 22px 24px; }
+    .home-btn .ico { font-size: 32px; }
+  }
   main { max-width: 1100px; margin: 0 auto; padding: 24px; }
   .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
   input, select, textarea {
@@ -162,16 +171,25 @@
 </head>
 <body>
 <header>
-  <h1>🎬 Controle de Gravações</h1>
+  <h1 onclick="navegar('home')" style="cursor:pointer" title="Voltar ao início">🎬 Controle de Gravações</h1>
   <span id="sync" class="sync">conectando…</span>
   <div class="tabs">
-    <button class="tab active" data-view="pessoas">👥 Pessoas</button>
+    <button class="tab" data-view="pessoas">👥 Pessoas</button>
     <button class="tab" data-view="agenda">📅 Agenda</button>
     <button class="tab" data-view="roteiro">📝 Roteiro</button>
   </div>
 </header>
 
 <main>
+  <!-- ===== INÍCIO (menu) ===== -->
+  <div id="view-home">
+    <div class="home-menu">
+      <button class="home-btn" onclick="navegar('pessoas')"><span class="ico">👥</span>Pessoas</button>
+      <button class="home-btn" onclick="navegar('agenda')"><span class="ico">📅</span>Agenda</button>
+      <button class="home-btn" onclick="navegar('roteiro')"><span class="ico">📝</span>Roteiro</button>
+    </div>
+  </div>
+
   <!-- ===== AGENDA ===== -->
   <div id="view-agenda" style="display:none">
     <div class="stats" id="stats"></div>
@@ -202,10 +220,9 @@
   </div>
 
   <!-- ===== PESSOAS ===== -->
-  <div id="view-pessoas">
+  <div id="view-pessoas" style="display:none">
     <div class="toolbar">
       <button class="btn" onclick="openPessoa()">+ Nova pessoa</button>
-      <input type="search" id="buscaPessoa" placeholder="Buscar pessoa por nome ou função..." oninput="renderPessoas()">
     </div>
     <div id="lista-pessoas"></div>
   </div>
@@ -405,16 +422,18 @@ function renderTudo() { renderAgenda(); renderRoteiros(); renderPessoas(); }
 function uid() { return Date.now().toString(36) + Math.floor(performance.now()).toString(36) + (db.gravacoes.length+db.pessoas.length); }
 
 /* ---------- Navegação ---------- */
-document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-  t.classList.add('active');
-  const v = t.dataset.view;
-  document.getElementById('view-agenda').style.display = v==='agenda' ? '' : 'none';
-  document.getElementById('view-roteiro').style.display = v==='roteiro' ? '' : 'none';
-  document.getElementById('view-pessoas').style.display = v==='pessoas' ? '' : 'none';
+function navegar(v) {
+  ['home','agenda','roteiro','pessoas'].forEach(name => {
+    const el = document.getElementById('view-'+name);
+    if (el) el.style.display = (name===v) ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.view===v));
   if (v==='pessoas') renderPessoas();
   if (v==='roteiro') renderRoteiros();
-});
+  if (v==='agenda') renderAgenda();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => navegar(t.dataset.view));
 
 /* ---------- Pessoas ---------- */
 const CORES = ['#6c8cff','#3ecf8e','#f5b942','#ff6b6b','#c084fc','#22d3ee','#fb7185','#a3e635'];
@@ -484,7 +503,8 @@ function excluirPessoa() {
 }
 function renderPessoas() {
   const el = document.getElementById('lista-pessoas');
-  const busca = (document.getElementById('buscaPessoa').value || '').toLowerCase();
+  const buscaEl = document.getElementById('buscaPessoa');
+  const busca = (buscaEl ? buscaEl.value : '').toLowerCase();
   if (!db.pessoas.length) {
     el.innerHTML = '<div class="empty"><div class="big">👥</div>Nenhuma pessoa cadastrada.<br>Clique em <b>+ Nova pessoa</b> para começar.</div>';
     return;
