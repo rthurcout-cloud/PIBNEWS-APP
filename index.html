@@ -112,6 +112,10 @@
   .roteiro-resumo { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
   .roteiro-preview { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 12px; color: var(--muted); font-size: 13px; white-space: pre-wrap; line-height: 1.55; max-height: 96px; overflow: hidden; }
   .roteiro-meta { color: var(--muted); font-size: 12px; margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .card.roteiro.feita { border-left-color: var(--green); }
+  .check-feita { display:inline-flex; align-items:center; gap:8px; margin-top:14px; font-size:14px; color:var(--muted); cursor:pointer; user-select:none; }
+  .check-feita input[type="checkbox"] { width:20px; height:20px; padding:0; margin:0; accent-color: var(--green); background:none; border:none; cursor:pointer; -webkit-appearance:auto; appearance:auto; }
+  .card.roteiro.feita .check-feita { color: var(--green); font-weight:600; }
   .card-head { display: flex; align-items: flex-start; gap: 12px; }
   .card-head .title { font-size: 16px; font-weight: 600; }
   .card-head .when { color: var(--muted); font-size: 13px; margin-top: 2px; }
@@ -635,7 +639,8 @@ function renderRoteiros() {
     return;
   }
   const comRoteiro = db.gravacoes.filter(g => g.roteiro && g.roteiro.trim()).length;
-  const resumo = `<div class="roteiro-resumo">📝 ${comRoteiro} de ${db.gravacoes.length} gravação(ões) com roteiro pronto</div>`;
+  const feitas = db.gravacoes.filter(g => g.feita).length;
+  const resumo = `<div class="roteiro-resumo">📝 ${comRoteiro} de ${db.gravacoes.length} com roteiro · ✅ ${feitas} feita(s) com sucesso</div>`;
   let list = db.gravacoes.slice().sort((a,b) => {
     if (!a.data && !b.data) return 0;
     if (!a.data) return 1;
@@ -649,7 +654,7 @@ function renderRoteiros() {
     const tem = !!txt;
     const palavras = tem ? txt.split(/\s+/).length : 0;
     const preview = tem ? esc(txt.slice(0,220)) + (txt.length>220?'…':'') : '';
-    return `<div class="card roteiro${tem?'':' vazio'}">
+    return `<div class="card roteiro${tem?'':' vazio'}${g.feita?' feita':''}">
       <div class="card-head">
         <div style="flex:1; min-width:0;">
           <div class="title">${esc(g.titulo)}</div>
@@ -665,11 +670,19 @@ function renderRoteiros() {
       ${tem
         ? `<div class="roteiro-preview">${preview}</div><div class="roteiro-meta"><span>📄 ${palavras} palavra(s)</span><span>✍️ ${txt.length} caracteres</span></div>`
         : '<div class="roteiro-preview" style="font-style:italic;">Ainda sem texto — clique em “Escrever” para começar.</div>'}
+      <div><label class="check-feita"><input type="checkbox" ${g.feita?'checked':''} onclick="toggleFeita('${g.id}', this.checked)"> ✅ Gravação feita com sucesso</label></div>
     </div>`;
   }).join('');
 }
 function atualizaContadorRoteiro() {
   document.getElementById('rContador').textContent = document.getElementById('rTexto').value.length;
+}
+function toggleFeita(id, val) {
+  const g = db.gravacoes.find(x => x.id===id);
+  if (!g) return;
+  g.feita = val;
+  save();
+  renderRoteiros();
 }
 document.getElementById('overlayRoteiro').addEventListener('click', e => { if (e.target.id==='overlayRoteiro') closeRoteiro(); });
 
