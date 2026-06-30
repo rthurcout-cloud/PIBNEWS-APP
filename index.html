@@ -681,8 +681,11 @@ function toggleFeita(id, val) {
   const g = db.gravacoes.find(x => x.id===id);
   if (!g) return;
   g.feita = val;
+  if (val) g.status = 'gravada';
+  else if (g.status === 'gravada') g.status = 'agendada';
   save();
   renderRoteiros();
+  renderAgenda();
 }
 document.getElementById('overlayRoteiro').addEventListener('click', e => { if (e.target.id==='overlayRoteiro') closeRoteiro(); });
 
