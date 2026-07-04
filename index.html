@@ -220,6 +220,7 @@
   <div id="view-roteiro" style="display:none">
     <div class="toolbar">
       <input type="search" id="buscaRoteiro" placeholder="Buscar gravação pelo título..." oninput="renderRoteiros()">
+      <button class="btn" onclick="novoRoteiro()">+ Novo roteiro</button>
     </div>
     <div id="lista-roteiros"></div>
   </div>
@@ -319,8 +320,12 @@
 <!-- ===== MODAL ROTEIRO ===== -->
 <div class="overlay" id="overlayRoteiro">
   <div class="modal wide">
-    <h2>📝 Roteiro — <span id="roteiroTitulo" style="color:var(--accent)"></span></h2>
+    <h2>📝 Roteiro</h2>
     <input type="hidden" id="rId">
+    <div class="field">
+      <label>Título da gravação</label>
+      <input id="rTitulo" type="text" placeholder="Ex.: PIB News — Programa 12">
+    </div>
     <div class="field">
       <label>🎬 Tema dos takes</label>
       <textarea id="rTema" rows="2" placeholder="Ex.: Convite para o culto de domingo · Testemunho do ministério de louvor · Avisos da semana"></textarea>
@@ -624,18 +629,37 @@ function openRoteiro(id) {
   const g = db.gravacoes.find(x => x.id===id);
   if (!g) return;
   document.getElementById('rId').value = g.id;
-  document.getElementById('roteiroTitulo').textContent = g.titulo;
+  document.getElementById('rTitulo').value = g.titulo || '';
   document.getElementById('rTema').value = g.tema || '';
   document.getElementById('rTexto').value = g.roteiro || '';
   atualizaContadorRoteiro();
   document.getElementById('overlayRoteiro').classList.add('open');
   setTimeout(() => document.getElementById('rTexto').focus(), 50);
 }
+function novoRoteiro() {
+  document.getElementById('rId').value = '';
+  document.getElementById('rTitulo').value = '';
+  document.getElementById('rTema').value = '';
+  document.getElementById('rTexto').value = '';
+  atualizaContadorRoteiro();
+  document.getElementById('overlayRoteiro').classList.add('open');
+  setTimeout(() => document.getElementById('rTitulo').focus(), 50);
+}
 function closeRoteiro() { document.getElementById('overlayRoteiro').classList.remove('open'); }
 function salvarRoteiro() {
   const id = document.getElementById('rId').value;
-  const g = db.gravacoes.find(x => x.id===id);
-  if (g) { g.tema = document.getElementById('rTema').value; g.roteiro = document.getElementById('rTexto').value; save(); renderAgenda(); renderRoteiros(); }
+  const titulo = document.getElementById('rTitulo').value.trim();
+  if (!titulo) { alert('Dê um título para o roteiro.'); return; }
+  const tema = document.getElementById('rTema').value;
+  const texto = document.getElementById('rTexto').value;
+  let g = id ? db.gravacoes.find(x => x.id===id) : null;
+  if (g) {
+    g.titulo = titulo; g.tema = tema; g.roteiro = texto;
+  } else {
+    g = { id: uid(), titulo, data: '', hora: '', status: 'agendada', notas: '', topicos: [], pessoas: [], tema, roteiro: texto };
+    db.gravacoes.push(g);
+  }
+  save(); renderAgenda(); renderRoteiros();
   closeRoteiro();
 }
 function renderRoteiros() {
