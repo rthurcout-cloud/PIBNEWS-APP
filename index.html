@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gravações">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
     --bg: #0f1115;
@@ -321,7 +322,12 @@
     <h2>📝 Roteiro — <span id="roteiroTitulo" style="color:var(--accent)"></span></h2>
     <input type="hidden" id="rId">
     <div class="field">
-      <textarea id="rTexto" rows="18" oninput="atualizaContadorRoteiro()" placeholder="Escreva aqui o roteiro da gravação...
+      <label>🎬 Tema dos takes</label>
+      <textarea id="rTema" rows="2" placeholder="Ex.: Convite para o culto de domingo · Testemunho do ministério de louvor · Avisos da semana"></textarea>
+    </div>
+    <div class="field">
+      <label>Roteiro</label>
+      <textarea id="rTexto" rows="16" oninput="atualizaContadorRoteiro()" placeholder="Escreva aqui o roteiro da gravação...
 
 Exemplo:
 • Abertura (00:00) — saudação e tema do dia
@@ -332,6 +338,7 @@ Exemplo:
     </div>
     <div class="modal-actions">
       <button class="btn secondary" onclick="closeRoteiro()">Fechar</button>
+      <button class="btn secondary" onclick="gerarPdfRoteiro(document.getElementById('rId').value, true)">📄 Gerar PDF</button>
       <button class="btn" onclick="salvarRoteiro()">Salvar roteiro</button>
     </div>
   </div>
@@ -618,6 +625,7 @@ function openRoteiro(id) {
   if (!g) return;
   document.getElementById('rId').value = g.id;
   document.getElementById('roteiroTitulo').textContent = g.titulo;
+  document.getElementById('rTema').value = g.tema || '';
   document.getElementById('rTexto').value = g.roteiro || '';
   atualizaContadorRoteiro();
   document.getElementById('overlayRoteiro').classList.add('open');
@@ -627,7 +635,7 @@ function closeRoteiro() { document.getElementById('overlayRoteiro').classList.re
 function salvarRoteiro() {
   const id = document.getElementById('rId').value;
   const g = db.gravacoes.find(x => x.id===id);
-  if (g) { g.roteiro = document.getElementById('rTexto').value; save(); renderAgenda(); renderRoteiros(); }
+  if (g) { g.tema = document.getElementById('rTema').value; g.roteiro = document.getElementById('rTexto').value; save(); renderAgenda(); renderRoteiros(); }
   closeRoteiro();
 }
 function renderRoteiros() {
@@ -665,10 +673,11 @@ function renderRoteiros() {
             ? '<span class="badge gravada">Roteiro pronto</span>'
             : '<span class="badge agendada">A escrever</span>'}
           <button class="btn small" onclick="openRoteiro('${g.id}')">${tem?'Abrir / editar':'Escrever'}</button>
+          ${tem?`<button class="btn small secondary" onclick="gerarPdfRoteiro('${g.id}')">📄 PDF</button>`:''}
         </div>
       </div>
       ${tem
-        ? `<div class="roteiro-preview">${preview}</div><div class="roteiro-meta"><span>📄 ${palavras} palavra(s)</span><span>✍️ ${txt.length} caracteres</span></div>`
+        ? `<div class="roteiro-preview">${preview}</div><div class="roteiro-meta">${g.tema&&g.tema.trim()?`<span>🎬 ${esc(g.tema.trim().slice(0,70))}${g.tema.trim().length>70?'…':''}</span>`:''}<span>📄 ${palavras} palavra(s)</span><span>✍️ ${txt.length} caracteres</span></div>`
         : '<div class="roteiro-preview" style="font-style:italic;">Ainda sem texto — clique em “Escrever” para começar.</div>'}
       <div><label class="check-feita"><input type="checkbox" ${g.feita?'checked':''} onclick="toggleFeita('${g.id}', this.checked)"> ✅ Gravação feita com sucesso</label></div>
     </div>`;
@@ -686,6 +695,55 @@ function toggleFeita(id, val) {
   save();
   renderRoteiros();
   renderAgenda();
+}
+/* ---------- PDF do roteiro (formato PIB News) ---------- */
+function pdfSafe(s){
+  return (s||'')
+    .replace(/[–—]/g,'-')
+    .replace(/[‘’]/g,"'")
+    .replace(/[“”]/g,'"')
+    .replace(/…/g,'...')
+    .replace(/[•●▪]/g,'-')
+    .replace(/[^\S\r\n]/g,' ');
+}
+function gerarPdfRoteiro(id, fromModal){
+  const g = db.gravacoes.find(x => x.id===id);
+  if (!g) { alert('Gravação não encontrada.'); return; }
+  const tema = fromModal ? document.getElementById('rTema').value : (g.tema || '');
+  const roteiro = fromModal ? document.getElementById('rTexto').value : (g.roteiro || '');
+  if (!roteiro.trim()) { alert('Escreva o roteiro antes de gerar o PDF.'); return; }
+  if (!window.jspdf || !window.jspdf.jsPDF) { alert('O gerador de PDF ainda está carregando. Tente de novo em 1-2 segundos.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 50;
+  let y = 62;
+  const linhas = roteiro.replace(/\r/g,'').split('\n');
+  let i = 0; while (i < linhas.length && !linhas[i].trim()) i++;
+  const titulo = pdfSafe((linhas[i] || 'ROTEIRO PIB NEWS').trim()); i++;
+  // Título
+  doc.setFont('helvetica','bold'); doc.setFontSize(19); doc.setTextColor(40,22,95);
+  doc.text(titulo.toUpperCase(), W/2, y, { align:'center' }); y += 8;
+  doc.setDrawColor(150,110,225); doc.setLineWidth(2.2); doc.line(M, y+4, W-M, y+4); y += 28;
+  // Tema dos takes
+  if (tema && tema.trim()) {
+    doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(120,70,205);
+    const tl = doc.splitTextToSize('Tema dos takes: ' + pdfSafe(tema.trim()), W-2*M);
+    tl.forEach(w => { if (y > H-50) { doc.addPage(); y = 62; } doc.text(w, M, y); y += 16; });
+    y += 8;
+  }
+  // Corpo (com TAKES em destaque)
+  const lh = 15.5;
+  for (; i < linhas.length; i++) {
+    const ln = pdfSafe(linhas[i]);
+    const ehTake = /^\s*TAKE\b/i.test(ln);
+    doc.setFont('helvetica', ehTake ? 'bold' : 'normal');
+    doc.setFontSize(ehTake ? 12 : 11);
+    if (ehTake) { doc.setTextColor(40,22,95); y += 4; } else doc.setTextColor(35,35,35);
+    const wrapped = doc.splitTextToSize(ln.length ? ln : ' ', W-2*M);
+    for (const w of wrapped) { if (y > H-50) { doc.addPage(); y = 62; } doc.text(w, M, y); y += lh; }
+  }
+  const safe = (g.titulo || 'PIB News').replace(/[\\/:*?"<>|]+/g,'-').trim();
+  doc.save('Roteiro - ' + safe + '.pdf');
 }
 document.getElementById('overlayRoteiro').addEventListener('click', e => { if (e.target.id==='overlayRoteiro') closeRoteiro(); });
 
