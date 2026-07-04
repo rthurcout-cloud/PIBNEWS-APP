@@ -82,6 +82,28 @@
     .home-btn { flex-direction: row; justify-content: flex-start; gap: 18px; padding: 22px 24px; }
     .home-btn .ico { font-size: 32px; }
   }
+  /* Calendário da página inicial */
+  .home-wrap { max-width: 1080px; margin: 22px auto 0; }
+  .cal-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .cal-mes { font-size: 20px; margin: 0; }
+  .cal-nav { display: flex; gap: 6px; }
+  .cal-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .cal-head, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; min-width: 700px; }
+  .cal-head div { text-align: center; color: var(--muted); font-size: 12px; font-weight: 700; padding: 2px 0; }
+  .cal-cell { min-height: 96px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px; cursor: pointer; transition: border-color .12s; }
+  .cal-cell:hover { border-color: var(--accent); }
+  .cal-cell.vazio { background: none; border: none; cursor: default; }
+  .cal-cell.hoje { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .cal-num { font-size: 12px; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+  .cal-cell.hoje .cal-num { color: var(--accent); }
+  .cal-evs { display: flex; flex-direction: column; gap: 3px; }
+  .cal-ev { font-size: 11px; line-height: 1.3; padding: 2px 6px; border-radius: 6px; background: rgba(108,140,255,.16); color: #dfe6ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--accent); cursor: pointer; }
+  .cal-ev:hover { filter: brightness(1.15); }
+  .cal-ev.gravada { border-left-color: var(--green); background: rgba(62,207,142,.14); color: #c7f2dd; }
+  .cal-ev.cancelada { border-left-color: var(--red); opacity: .65; text-decoration: line-through; }
+  .cal-legenda { color: var(--muted); font-size: 12.5px; margin-top: 12px; }
+  .cal-legenda .pt { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: middle; margin: 0 2px 0 8px; }
+  .cal-legenda .pt.ag { background: var(--accent); } .cal-legenda .pt.gr { background: var(--green); } .cal-legenda .pt.ca { background: var(--red); }
   main { max-width: 1100px; margin: 0 auto; padding: 24px; }
   .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
   input, select, textarea {
@@ -188,11 +210,7 @@
 <main>
   <!-- ===== INÍCIO (menu) ===== -->
   <div id="view-home">
-    <div class="home-menu">
-      <button class="home-btn" onclick="navegar('pessoas')"><span class="ico">👥</span>Pessoas</button>
-      <button class="home-btn" onclick="navegar('agenda')"><span class="ico">📅</span>Agenda</button>
-      <button class="home-btn" onclick="navegar('roteiro')"><span class="ico">📝</span>Roteiro</button>
-    </div>
+    <div class="home-wrap" id="home-cal"></div>
   </div>
 
   <!-- ===== AGENDA ===== -->
@@ -444,6 +462,7 @@ function navegar(v) {
     if (el) el.style.display = (name===v) ? '' : 'none';
   });
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.view===v));
+  if (v==='home') renderHome();
   if (v==='pessoas') renderPessoas();
   if (v==='roteiro') renderRoteiros();
   if (v==='agenda') renderAgenda();
@@ -559,7 +578,7 @@ function renderTopicTags() {
 }
 
 /* ---------- Modal gravação ---------- */
-function openGravacao(id) {
+function openGravacao(id, dataPre) {
   const ov = document.getElementById('overlay');
   const peoplePick = document.getElementById('peoplePick');
   peoplePick.innerHTML = db.pessoas.map(p =>
@@ -586,7 +605,7 @@ function openGravacao(id) {
     document.getElementById('modalTitle').textContent = 'Nova gravação';
     document.getElementById('gId').value = '';
     document.getElementById('gTitulo').value = '';
-    document.getElementById('gData').value = '';
+    document.getElementById('gData').value = dataPre || '';
     document.getElementById('gHora').value = '';
     document.getElementById('gStatus').value = 'agendada';
     document.getElementById('gNotas').value = '';
@@ -795,8 +814,52 @@ function fmtData(d, h) {
 }
 function pessoaById(id){ return db.pessoas.find(p=>p.id===id); }
 
+/* ---------- Calendário da página inicial ---------- */
+let homeAno = null, homeMes = null;
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function homeHoje(){ const d = new Date(); homeAno = d.getFullYear(); homeMes = d.getMonth(); renderHome(); }
+function homeNav(delta){
+  if (homeAno == null) homeHoje();
+  homeMes += delta;
+  if (homeMes < 0) { homeMes = 11; homeAno--; }
+  if (homeMes > 11) { homeMes = 0; homeAno++; }
+  renderHome();
+}
+function renderHome(){
+  const el = document.getElementById('home-cal'); if (!el) return;
+  if (homeAno == null) { const d = new Date(); homeAno = d.getFullYear(); homeMes = d.getMonth(); }
+  const offset = new Date(homeAno, homeMes, 1).getDay();
+  const nd = new Date(homeAno, homeMes + 1, 0).getDate();
+  const hojeISO = new Date().toISOString().slice(0,10);
+  const porData = {};
+  db.gravacoes.forEach(g => { if (g.data) (porData[g.data] = porData[g.data] || []).push(g); });
+  Object.values(porData).forEach(arr => arr.sort((a,b) => (a.hora||'').localeCompare(b.hora||'')));
+  const head = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(x => `<div>${x}</div>`).join('');
+  let cells = '';
+  for (let i = 0; i < offset; i++) cells += '<div class="cal-cell vazio"></div>';
+  for (let d = 1; d <= nd; d++) {
+    const iso = `${homeAno}-${String(homeMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evs = porData[iso] || [];
+    const chips = evs.map(g => `<div class="cal-ev ${g.status}" onclick="event.stopPropagation(); openGravacao('${g.id}')" title="${esc(g.titulo)}${g.hora?' · '+g.hora:''}">${g.hora?esc(g.hora)+' · ':''}${esc(g.titulo)}</div>`).join('');
+    cells += `<div class="cal-cell${iso===hojeISO?' hoje':''}" onclick="openGravacao(null,'${iso}')"><div class="cal-num">${d}</div><div class="cal-evs">${chips}</div></div>`;
+  }
+  el.innerHTML = `
+    <div class="cal-top">
+      <div class="cal-nav">
+        <button class="btn ghost small" onclick="homeNav(-1)">‹ mês</button>
+        <button class="btn ghost small" onclick="homeNav(1)">mês ›</button>
+        <button class="btn ghost small" onclick="homeHoje()">Hoje</button>
+      </div>
+      <h2 class="cal-mes">${MESES_PT[homeMes]} de ${homeAno}</h2>
+      <button class="btn" style="margin-left:auto" onclick="openGravacao()">+ Nova gravação</button>
+    </div>
+    <div class="cal-wrap"><div class="cal-head">${head}</div><div class="cal-grid">${cells}</div></div>
+    <div class="cal-legenda">Toque num <b>dia</b> para agendar uma gravação, ou num <b>evento</b> para editar.
+      <span class="pt ag"></span> agendada <span class="pt gr"></span> gravada <span class="pt ca"></span> cancelada</div>`;
+}
 function renderAgenda() {
   renderStats();
+  renderHome();
   const busca = document.getElementById('busca').value.toLowerCase();
   const fStatus = document.getElementById('filtroStatus').value;
   let list = db.gravacoes.slice();
