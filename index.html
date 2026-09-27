@@ -4,208 +4,250 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Gravações PIBN</title>
-<meta name="theme-color" content="#0f1115">
+<meta name="theme-color" content="#121417">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gravações">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
+  /* Visual novo (27/09/2026): base escura igual ao Controle de Carros, destaque roxo PIB News, botões próprios */
   :root {
-    --bg: #0f1115;
-    --surface: #1a1d24;
-    --surface-2: #232733;
-    --border: #2e3340;
-    --text: #e6e8ec;
-    --muted: #9aa0ac;
-    --accent: #6c8cff;
-    --accent-soft: #2a3354;
-    --green: #3ecf8e;
-    --green-soft: #16331f;
-    --amber: #f5b942;
-    --amber-soft: #3a2e10;
-    --red: #ff6b6b;
-    --red-soft: #3a1717;
-    --radius: 12px;
+    --bg: #121417;
+    --surface: #1C1F24;
+    --surface-2: #23272E;
+    --border: #2C3038;
+    --text: #ECEDEE;
+    --muted: #A3AAB3;
+    --accent: #7C5CFA;          /* fundo de botão (texto branco passa em contraste) */
+    --accent-2: #9A80FF;        /* borda / brilho */
+    --accent-text: #B4A4FF;     /* texto roxo sobre fundo escuro */
+    --accent-soft: rgba(124,92,250,.16);
+    --rec: #FF4D5E;
+    --green: #4FD18B;
+    --green-soft: rgba(79,209,139,.14);
+    --amber: #F2B04A;
+    --amber-soft: rgba(242,176,74,.14);
+    --red: #F07167;
+    --red-soft: rgba(240,113,103,.14);
+    --radius: 18px;
+    --disp: 'Space Grotesk', 'IBM Plex Sans', 'Segoe UI', sans-serif;
+    --ease: cubic-bezier(.32,.72,0,1);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(160deg, #0a1330 0%, #140a38 55%, #1e0f42 100%);
-    background-attachment: fixed;
+    font-family: 'IBM Plex Sans', 'Segoe UI', -apple-system, sans-serif;
+    background: var(--bg);
     min-height: 100vh;
     color: var(--text);
     font-size: 15px;
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
-  /* leve profundidade nas bordas */
-  body::after {
-    content: "";
-    position: fixed; inset: 0;
-    background: radial-gradient(ellipse at 50% 22%, transparent 52%, rgba(0,0,0,0.4) 100%);
-    z-index: 0;
-    pointer-events: none;
-  }
-  main { position: relative; z-index: 1; }
+  .ico { width: 18px; height: 18px; flex: 0 0 auto; }
+  .ico-s { width: 14px; height: 14px; flex: 0 0 auto; vertical-align: -2px; opacity: .85; }
+
+  /* ---------- Topo ---------- */
   header {
-    background: rgba(18, 21, 30, 0.72);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(18,20,23,.88);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    padding: 16px 24px;
-    padding-top: max(16px, env(safe-area-inset-top));
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    padding: 14px 28px; padding-top: max(14px, env(safe-area-inset-top));
+    display: flex; align-items: center; gap: 14px;
+    position: sticky; top: 0; z-index: 10;
   }
-  header h1 { font-size: 18px; margin: 0; display: flex; align-items: center; gap: 8px; }
-  .sync { font-size: 12px; color: var(--muted); padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; white-space: nowrap; }
-  .tabs { display: flex; gap: 4px; margin-left: auto; }
+  .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .brand .logo { width: 40px; height: 40px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+  .brand .logo i { width: 12px; height: 12px; border-radius: 99px; background: var(--rec); box-shadow: 0 0 0 4px rgba(255,77,94,.18); }
+  .brand small { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: 1.3px; text-transform: uppercase; color: var(--muted); line-height: 1.2; }
+  header h1 { font-family: var(--disp); font-size: 20px; font-weight: 700; margin: 0; line-height: 1.15; }
+  .sync { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .sync::before { content: ''; width: 8px; height: 8px; border-radius: 99px; background: var(--sync-cor, var(--muted)); }
+  .tabs { display: flex; gap: 4px; margin-left: auto; background: var(--surface); border: 1px solid var(--border); padding: 5px; border-radius: 16px; }
   .tab {
-    padding: 8px 16px; border-radius: 8px; cursor: pointer;
-    color: var(--muted); border: 1px solid transparent; background: none; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 8px; min-height: 40px;
+    padding: 0 16px; border-radius: 12px; cursor: pointer; font-family: inherit;
+    color: var(--muted); border: 0; background: none; font-size: 14px; font-weight: 500;
+    transition: background .18s, color .18s;
   }
-  .tab:hover { background: var(--surface-2); color: var(--text); }
-  .tab.active { background: var(--accent-soft); color: #fff; border-color: var(--accent); }
-  .home-menu { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 760px; margin: 7vh auto 0; }
-  .home-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; color: var(--text); cursor: pointer; font-size: 18px; font-weight: 600; transition: transform .12s, border-color .12s, background .12s; }
-  .home-btn:hover { border-color: var(--accent); transform: translateY(-3px); background: var(--surface-2); }
-  .home-btn .ico { font-size: 42px; line-height: 1; }
-  @media (max-width: 560px) {
-    .home-menu { grid-template-columns: 1fr; gap: 12px; margin-top: 3vh; }
-    .home-btn { flex-direction: row; justify-content: flex-start; gap: 18px; padding: 22px 24px; }
-    .home-btn .ico { font-size: 32px; }
+  .tab:hover { color: var(--text); background: var(--surface-2); }
+  .tab.active { background: var(--accent); color: #fff; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 6px 16px -8px rgba(124,92,250,.9); }
+
+  /* ---------- Menu de baixo (celular) ---------- */
+  .bnav { display: none; }
+
+  main { position: relative; max-width: 1120px; margin: 0 auto; padding: 26px 28px 60px; }
+
+  /* ---------- Botões ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 0 18px; border-radius: 14px;
+    font-family: inherit; font-size: 14px; font-weight: 600; letter-spacing: .1px;
+    background: var(--accent); color: #fff; border: 1px solid var(--accent-2);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 8px 20px -10px rgba(124,92,250,.95);
+    cursor: pointer; transition: transform .14s var(--ease), filter .18s, box-shadow .18s, background .18s, border-color .18s;
   }
-  /* Calendário da página inicial */
-  .home-wrap { max-width: 1080px; margin: 22px auto 0; }
-  .cal-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-  .cal-mes { font-size: 20px; margin: 0; }
+  .btn:hover { filter: brightness(1.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 10px 26px -10px rgba(124,92,250,1); }
+  .btn:active { transform: scale(.97); }
+  .btn:focus-visible, .tab:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+  .btn.secondary { background: var(--surface-2); border-color: var(--border); color: var(--text); font-weight: 500; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+  .btn.secondary:hover { border-color: #444a55; background: #2A2F37; filter: none; }
+  .btn.ghost { background: transparent; border-color: var(--border); color: var(--text); font-weight: 500; box-shadow: none; }
+  .btn.ghost:hover { background: var(--surface-2); filter: none; }
+  .btn.danger { background: var(--red-soft); color: var(--red); border-color: rgba(240,113,103,.4); box-shadow: none; }
+  .btn.danger:hover { background: rgba(240,113,103,.22); filter: none; }
+  .btn.small { min-height: 38px; padding: 0 13px; font-size: 13px; border-radius: 12px; }
+  .btn.icon-only { width: 44px; padding: 0; }
+  .btn.small.icon-only { width: 38px; }
+
+  /* ---------- Início: calendário ---------- */
+  .home-wrap { max-width: 1120px; margin: 0 auto; }
+  .cal-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .cal-mes { font-family: var(--disp); font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
   .cal-nav { display: flex; gap: 6px; }
   .cal-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-  .cal-head, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; min-width: 700px; }
-  .cal-head div { text-align: center; color: var(--muted); font-size: 12px; font-weight: 700; padding: 2px 0; }
-  .cal-cell { min-height: 96px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px; cursor: pointer; transition: border-color .12s; }
-  .cal-cell:hover { border-color: var(--accent); }
+  .cal-head, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 8px; min-width: 700px; }
+  .cal-head div { text-align: center; color: var(--muted); font-size: 11.5px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; padding: 2px 0 4px; }
+  .cal-cell { min-height: 100px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px; cursor: pointer; transition: border-color .15s, background .15s; }
+  .cal-cell:hover { border-color: #444a55; background: #20242A; }
   .cal-cell.vazio { background: none; border: none; cursor: default; }
-  .cal-cell.hoje { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-  .cal-num { font-size: 12px; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
-  .cal-cell.hoje .cal-num { color: var(--accent); }
-  .cal-evs { display: flex; flex-direction: column; gap: 3px; }
-  .cal-ev { font-size: 11px; line-height: 1.3; padding: 2px 6px; border-radius: 6px; background: rgba(108,140,255,.16); color: #dfe6ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--accent); cursor: pointer; }
-  .cal-ev:hover { filter: brightness(1.15); }
-  .cal-ev.gravada { border-left-color: var(--green); background: rgba(62,207,142,.14); color: #c7f2dd; }
-  .cal-ev.cancelada { border-left-color: var(--red); opacity: .65; text-decoration: line-through; }
-  .cal-legenda { color: var(--muted); font-size: 12.5px; margin-top: 12px; }
-  .cal-legenda .pt { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: middle; margin: 0 2px 0 8px; }
-  .cal-legenda .pt.ag { background: var(--accent); } .cal-legenda .pt.gr { background: var(--green); } .cal-legenda .pt.ca { background: var(--red); }
-  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
-  .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  .cal-cell.hoje { border-color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
+  .cal-num { font-family: var(--disp); font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .cal-cell.hoje .cal-num { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 99px; background: var(--accent); color: #fff; }
+  .cal-evs { display: flex; flex-direction: column; gap: 4px; }
+  .cal-ev { font-size: 11.5px; line-height: 1.3; padding: 3px 7px; border-radius: 7px; background: var(--accent-soft); color: #DCD4FF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  .cal-ev:hover { filter: brightness(1.2); }
+  .cal-ev.gravada { background: var(--green-soft); color: #C9F2DC; }
+  .cal-ev.cancelada { background: var(--surface-2); color: var(--muted); text-decoration: line-through; }
+  .cal-legenda { color: var(--muted); font-size: 12.5px; margin-top: 14px; }
+  .cal-legenda .pt { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: middle; margin: 0 3px 0 10px; }
+  .cal-legenda .pt.ag { background: var(--accent); } .cal-legenda .pt.gr { background: var(--green); } .cal-legenda .pt.ca { background: #5A606A; }
+
+  /* ---------- Listas ---------- */
+  .toolbar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
   input, select, textarea {
     background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
-    padding: 9px 12px; border-radius: 8px; font-size: 16px; font-family: inherit;
+    padding: 10px 13px; min-height: 44px; border-radius: 12px; font-size: 16px; font-family: inherit;
+    transition: border-color .18s, box-shadow .18s;
   }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
-  input[type="search"] { min-width: 200px; }
-  .btn {
-    background: var(--accent); color: #fff; border: none; padding: 9px 16px;
-    border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
-  }
-  .btn:hover { filter: brightness(1.1); }
-  .btn.secondary { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-weight: 500; }
-  .btn.ghost { background: none; border: 1px solid var(--border); color: var(--muted); }
-  .btn.danger { background: var(--red-soft); color: var(--red); border: 1px solid var(--red); }
-  .btn.small { padding: 5px 10px; font-size: 13px; }
-  .stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; flex: 1; min-width: 120px; }
-  .stat .num { font-size: 26px; font-weight: 700; }
-  .stat .lbl { color: var(--muted); font-size: 13px; }
-  .card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 16px 18px; margin-bottom: 12px;
-  }
-  .card.gravacao { border-left: 4px solid var(--accent); }
-  .card.roteiro { border-left: 4px solid #c084fc; }
-  .card.roteiro.vazio { border-left-color: var(--border); }
-  .roteiro-resumo { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
-  .roteiro-preview { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 12px; color: var(--muted); font-size: 13px; white-space: pre-wrap; line-height: 1.55; max-height: 96px; overflow: hidden; }
-  .roteiro-meta { color: var(--muted); font-size: 12px; margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap; }
-  .card.roteiro.feita { border-left-color: var(--green); }
-  .check-feita { display:inline-flex; align-items:center; gap:8px; margin-top:14px; font-size:14px; color:var(--muted); cursor:pointer; user-select:none; }
-  .check-feita input[type="checkbox"] { width:20px; height:20px; padding:0; margin:0; accent-color: var(--green); background:none; border:none; cursor:pointer; -webkit-appearance:auto; appearance:auto; }
-  .card.roteiro.feita .check-feita { color: var(--green); font-weight:600; }
-  .card-head { display: flex; align-items: flex-start; gap: 12px; }
-  .card-head .title { font-size: 16px; font-weight: 600; }
-  .card-head .when { color: var(--muted); font-size: 13px; margin-top: 2px; }
-  .card-actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-  .badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(124,92,250,.22); }
+  input::placeholder, textarea::placeholder { color: #6B727C; }
+  input[type="date"], input[type="time"] { color-scheme: dark; }
+  input[type="search"] { min-width: 220px; flex: 1; max-width: 420px; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 20px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .stat .num { font-family: var(--disp); font-size: 28px; font-weight: 700; line-height: 1.1; }
+  .stat .lbl { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px; position: relative; }
+  .card.gravacao::before, .card.roteiro::before { content: ''; position: absolute; left: 0; top: 18px; bottom: 18px; width: 4px; border-radius: 0 4px 4px 0; background: var(--accent); }
+  .card.roteiro.vazio::before { background: var(--border); }
+  .card.roteiro.feita::before { background: var(--green); }
+  .roteiro-resumo { color: var(--muted); font-size: 13px; margin-bottom: 14px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .roteiro-resumo b { color: var(--text); font-weight: 600; }
+  .roteiro-preview { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-top: 14px; color: #C4C9D0; font-size: 13.5px; white-space: pre-wrap; line-height: 1.6; max-height: 104px; overflow: hidden; }
+  .roteiro-meta { color: var(--muted); font-size: 12.5px; margin-top: 10px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .roteiro-meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .check-feita { display: inline-flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 14px; color: var(--muted); cursor: pointer; user-select: none; padding: 8px 12px 8px 10px; border: 1px solid var(--border); border-radius: 12px; }
+  .check-feita input[type="checkbox"] { width: 20px; height: 20px; min-height: 0; padding: 0; margin: 0; accent-color: var(--green); background: none; border: none; cursor: pointer; -webkit-appearance: auto; appearance: auto; }
+  .card.roteiro.feita .check-feita { color: var(--green); font-weight: 600; border-color: rgba(79,209,139,.4); background: var(--green-soft); }
+  .card-head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .card-head .title { font-family: var(--disp); font-size: 17px; font-weight: 600; }
+  .card-head .when { color: var(--muted); font-size: 13px; margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+  .card-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+  .badge { padding: 4px 11px; border-radius: 99px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 99px; background: currentColor; }
   .badge.agendada { background: var(--amber-soft); color: var(--amber); }
   .badge.gravada { background: var(--green-soft); color: var(--green); }
-  .badge.cancelada { background: var(--red-soft); color: var(--red); }
-  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-  .chip {
-    background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px;
-    padding: 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;
-  }
+  .badge.cancelada { background: var(--surface-2); color: var(--muted); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; padding: 4px 11px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; }
   .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .chip.topic { background: var(--accent-soft); border-color: var(--accent); }
-  .section-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin: 12px 0 4px; }
+  .chip.topic { background: var(--accent-soft); border-color: rgba(154,128,255,.35); color: #DCD4FF; }
+  .section-label { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin: 14px 0 4px; }
   .empty { text-align: center; color: var(--muted); padding: 60px 20px; }
-  .empty .big { font-size: 42px; margin-bottom: 8px; }
-  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 12px; }
-  .person-card { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius); padding:16px; display:flex; gap:12px; align-items:flex-start; }
-  .avatar { width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; flex-shrink:0; font-size:17px; }
-  .person-card .info { flex:1; min-width:0; }
-  .person-card .nome { font-weight:600; font-size:15px; }
-  .person-card .meta { color:var(--muted); font-size:13px; word-break:break-word; }
-  .person-card .acts { display:flex; gap:6px; margin-top:12px; }
-  .overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none;
-    align-items: flex-start; justify-content: center; z-index: 50; overflow-y: auto; padding: 40px 16px;
-  }
+  .empty .big { display: none; }
+  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; }
+  .person-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; display: flex; gap: 14px; align-items: flex-start; }
+  .avatar { width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-family: var(--disp); font-weight: 700; color: #fff; flex-shrink: 0; font-size: 17px; }
+  .person-card .info { flex: 1; min-width: 0; }
+  .person-card .nome { font-weight: 600; font-size: 15.5px; }
+  .person-card .meta { color: var(--muted); font-size: 13px; word-break: break-word; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+  .person-card .acts { display: flex; gap: 6px; margin-top: 12px; }
+
+  /* ---------- Janelas ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(8,9,11,.74); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: none; align-items: flex-start; justify-content: center; z-index: 60; overflow-y: auto; padding: 5vh 16px; }
   .overlay.open { display: flex; }
-  .modal {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-    width: 100%; max-width: 560px; padding: 24px;
-  }
-  .modal.wide { max-width: 780px; }
-  .modal h2 { margin: 0 0 18px; font-size: 18px; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; width: 100%; max-width: 560px; padding: 24px; box-shadow: 0 18px 44px -14px rgba(0,0,0,.7); animation: pop .28s var(--ease); }
+  @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+  .modal.wide { max-width: 800px; }
+  .modal h2 { font-family: var(--disp); margin: 0 0 18px; font-size: 21px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
   .field { margin-bottom: 14px; }
-  .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
+  .field label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
   .field input, .field select, .field textarea { width: 100%; }
-  .row { display: flex; gap: 12px; }
-  .row .field { flex: 1; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row .field { flex: 1; min-width: 120px; }
   .add-inline { display: flex; gap: 8px; }
   .add-inline input { flex: 1; }
   .people-pick { display: flex; gap: 8px; flex-wrap: wrap; }
-  .people-pick label {
-    display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2);
-    border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: 13px;
-  }
-  .people-pick label.checked { background: var(--accent-soft); border-color: var(--accent); }
+  .people-pick label { display: inline-flex; align-items: center; gap: 7px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; padding: 7px 13px; cursor: pointer; font-size: 13.5px; min-height: 38px; }
+  .people-pick label.checked { background: var(--accent-soft); border-color: var(--accent-2); color: #fff; }
   .people-pick input { display: none; }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-  a.link { color: var(--accent); cursor: pointer; text-decoration: none; font-size: 13px; }
-  .topic-tag { display:inline-flex; align-items:center; gap:6px; background: var(--accent-soft); border:1px solid var(--accent); border-radius:20px; padding:4px 10px; font-size:13px; margin:0 6px 6px 0;}
-  .topic-tag button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:14px; line-height:1; padding:0; }
-  .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; flex-wrap: wrap; }
+  a.link { color: var(--accent-text); cursor: pointer; text-decoration: none; font-size: 13px; }
+  .topic-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); border: 1px solid rgba(154,128,255,.35); border-radius: 99px; padding: 5px 6px 5px 12px; font-size: 13px; margin: 0 6px 6px 0; }
+  .topic-tag button { background: rgba(255,255,255,.08); border: none; color: #DCD4FF; cursor: pointer; font-size: 12px; line-height: 1; width: 22px; height: 22px; border-radius: 99px; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  /* ---------- Celular ---------- */
+  @media (max-width: 760px) {
+    header { padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); }
+    header .tabs { display: none; }
+    .sync { margin-left: auto; }
+    main { padding: 18px 16px 120px; }
+    .bnav {
+      display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); align-items: center;
+      position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
+      height: 70px; padding: 0 4px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 24px; z-index: 50; box-shadow: 0 14px 34px -12px rgba(0,0,0,.85);
+    }
+    .bnav .tab { flex-direction: column; gap: 3px; min-height: 58px; padding: 0 2px; border-radius: 16px; font-size: 11px; font-weight: 600; color: var(--muted); }
+    .bnav .tab .ico { width: 22px; height: 22px; }
+    .bnav .tab.active { background: var(--accent-soft); color: var(--accent-text); box-shadow: none; }
+    .bnav .rec { justify-self: center; width: 60px; height: 60px; margin-top: -30px; border-radius: 99px; border: 4px solid var(--bg); background: var(--rec); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 10px 24px -8px rgba(255,77,94,.9); }
+    .bnav .rec .ico { width: 26px; height: 26px; }
+    .bnav .rec:active { transform: scale(.95); }
+    .cal-mes { font-size: 22px; }
+    .cal-top .btn-nova { display: none; }
+    .stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .card-actions { margin-left: 0; width: 100%; justify-content: flex-start; }
+    input[type="search"] { max-width: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <header>
-  <h1 onclick="navegar('home')" style="cursor:pointer" title="Voltar ao início">🎬 Gravações PIBN</h1>
-  <span id="sync" class="sync">conectando…</span>
-  <div class="tabs">
-    <button class="tab" data-view="pessoas">👥 Pessoas</button>
-    <button class="tab" data-view="agenda">📅 Agenda</button>
-    <button class="tab" data-view="roteiro">📝 Roteiro</button>
-  </div>
+  <div class="brand" onclick="navegar('home')" title="Voltar ao início"><div class="logo"><i></i></div><div><small>PIB News</small><h1>Gravações PIBN</h1></div></div>
+  <span id="sync" class="sync">Conectando…</span>
+  <nav class="tabs" aria-label="Menu">
+    <button class="tab" data-view="home"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg> Início</button>
+    <button class="tab" data-view="agenda"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg> Agenda</button>
+    <button class="tab" data-view="roteiro"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg> Roteiro</button>
+    <button class="tab" data-view="pessoas"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg> Pessoas</button>
+  </nav>
 </header>
+<nav class="bnav" aria-label="Menu">
+  <button class="tab" data-view="home"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+  <button class="tab" data-view="agenda"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</button>
+  <button class="rec" aria-label="Nova gravação" onclick="openGravacao()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="tab" data-view="roteiro"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Roteiro</button>
+  <button class="tab" data-view="pessoas"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg>Pessoas</button>
+</nav>
 
 <main>
   <!-- ===== INÍCIO (menu) ===== -->
@@ -217,7 +259,7 @@
   <div id="view-agenda" style="display:none">
     <div class="stats" id="stats"></div>
     <div class="toolbar">
-      <button class="btn" onclick="openGravacao()">+ Nova gravação</button>
+      <button class="btn" onclick="openGravacao()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Nova gravação</button>
       <input type="search" id="busca" placeholder="Buscar por título, tópico ou pessoa..." oninput="renderAgenda()">
       <select id="filtroStatus" onchange="renderAgenda()">
         <option value="">Todos os status</option>
@@ -226,8 +268,8 @@
         <option value="cancelada">Canceladas</option>
       </select>
       <div style="margin-left:auto; display:flex; gap:8px;">
-        <button class="btn ghost small" onclick="exportData()">⬇ Backup</button>
-        <button class="btn ghost small" onclick="document.getElementById('importFile').click()">⬆ Importar</button>
+        <button class="btn ghost small" onclick="exportData()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg> Backup</button>
+        <button class="btn ghost small" onclick="document.getElementById('importFile').click()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9M7 14l5-5 5 5M5 4h14"/></svg> Importar</button>
         <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)">
       </div>
     </div>
@@ -238,7 +280,7 @@
   <div id="view-roteiro" style="display:none">
     <div class="toolbar">
       <input type="search" id="buscaRoteiro" placeholder="Buscar gravação pelo título..." oninput="renderRoteiros()">
-      <button class="btn" onclick="novoRoteiro()">+ Novo roteiro</button>
+      <button class="btn" onclick="novoRoteiro()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg> Novo roteiro</button>
     </div>
     <div id="lista-roteiros"></div>
   </div>
@@ -246,7 +288,7 @@
   <!-- ===== PESSOAS ===== -->
   <div id="view-pessoas" style="display:none">
     <div class="toolbar">
-      <button class="btn" onclick="openPessoa()">+ Nova pessoa</button>
+      <button class="btn" onclick="openPessoa()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Nova pessoa</button>
     </div>
     <div id="lista-pessoas"></div>
   </div>
@@ -338,14 +380,14 @@
 <!-- ===== MODAL ROTEIRO ===== -->
 <div class="overlay" id="overlayRoteiro">
   <div class="modal wide">
-    <h2>📝 Roteiro</h2>
+    <h2><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg> Roteiro</h2>
     <input type="hidden" id="rId">
     <div class="field">
       <label>Título da gravação</label>
       <input id="rTitulo" type="text" placeholder="Ex.: PIB News — Programa 12">
     </div>
     <div class="field">
-      <label>🎬 Tema dos takes</label>
+      <label><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 11l1.5-6L20 8.5 19 11M8.5 5.5l2 5M13.5 6.8l2 4"/></svg> Tema dos takes</label>
       <textarea id="rTema" rows="2" placeholder="Ex.: Convite para o culto de domingo · Testemunho do ministério de louvor · Avisos da semana"></textarea>
     </div>
     <div class="field">
@@ -361,13 +403,15 @@ Exemplo:
     </div>
     <div class="modal-actions">
       <button class="btn secondary" onclick="closeRoteiro()">Fechar</button>
-      <button class="btn secondary" onclick="gerarPdfRoteiro(document.getElementById('rId').value, true)">📄 Gerar PDF</button>
-      <button class="btn" onclick="salvarRoteiro()">Salvar roteiro</button>
+      <button class="btn secondary" onclick="gerarPdfRoteiro(document.getElementById('rId').value, true)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 12v6M9 15l3 3 3-3"/></svg> Gerar PDF</button>
+      <button class="btn" onclick="salvarRoteiro()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Salvar roteiro</button>
     </div>
   </div>
 </div>
 
 <script>
+const IC = {"cal": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/></svg>", "clap": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z\"/><path d=\"M4 11l1.5-6L20 8.5 19 11M8.5 5.5l2 5M13.5 6.8l2 4\"/></svg>", "pdf": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M12 12v6M9 15l3 3 3-3\"/></svg>", "words": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 6h16M4 12h16M4 18h10\"/></svg>", "phone": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2\"/></svg>", "check": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg>", "pen": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20h4L19 9l-4-4L4 16z\"/><path d=\"M13.5 6.5l4 4\"/></svg>", "doc": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M8 13h8M8 17h5\"/></svg>"};
+const ICB = {"left": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 5l-7 7 7 7\"/></svg>", "right": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 5l7 7-7 7\"/></svg>", "plus": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 5v14M5 12h14\"/></svg>", "pen": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20h4L19 9l-4-4L4 16z\"/><path d=\"M13.5 6.5l4 4\"/></svg>", "pdf": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M12 12v6M9 15l3 3 3-3\"/></svg>", "doc": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M8 13h8M8 17h5\"/></svg>"};
 let db = { gravacoes: [], pessoas: [] };
 let draftTopics = [];
 let accessCode = localStorage.getItem('cg-code') || '';
@@ -381,7 +425,7 @@ function normalize(d) {
 function setSync(state) {
   const el = document.getElementById('sync');
   const map = {
-    ok:        ['✓ Sincronizado', 'var(--green)'],
+    ok:        ['Sincronizado',   'var(--green)'],
     salvando:  ['Salvando…',       'var(--amber)'],
     erro:      ['Erro ao salvar',  'var(--red)'],
     off:       ['Sem conexão',     'var(--muted)'],
@@ -389,7 +433,7 @@ function setSync(state) {
     conectando:['Conectando…',     'var(--muted)']
   };
   const [txt, cor] = map[state] || map.conectando;
-  el.textContent = txt; el.style.color = cor; el.style.borderColor = cor;
+  el.textContent = txt; el.style.setProperty('--sync-cor', cor);
 }
 function pedirCodigo(msg) {
   const c = window.prompt(msg || 'Digite o código de acesso do app:');
@@ -554,10 +598,10 @@ function renderPessoas() {
       <div class="info">
         <div class="nome">${esc(p.nome)}</div>
         ${p.papel?`<div class="meta">${esc(p.papel)}</div>`:''}
-        ${(p.telefone||p.contato)?`<div class="meta">📞 <a class="link" href="tel:${esc(soDigitos(p.telefone||p.contato))}">${esc(p.telefone||p.contato)}</a> <a class="link" style="color:var(--green)" href="${waLink(p.telefone||p.contato)}" target="_blank" rel="noopener" title="Abrir no WhatsApp">WhatsApp ↗</a></div>`:''}
-        <div class="meta">🎬 ${count} gravação(ões)</div>
+        ${(p.telefone||p.contato)?`<div class="meta">${IC.phone} <a class="link" href="tel:${esc(soDigitos(p.telefone||p.contato))}">${esc(p.telefone||p.contato)}</a> <a class="link" style="color:var(--green)" href="${waLink(p.telefone||p.contato)}" target="_blank" rel="noopener" title="Abrir no WhatsApp">WhatsApp ↗</a></div>`:''}
+        <div class="meta">${IC.clap} ${count} gravação(ões)</div>
         <div class="acts">
-          <button class="btn secondary small" onclick="openPessoa('${p.id}')">Editar</button>
+          <button class="btn secondary small" onclick="openPessoa('${p.id}')">${ICB.pen} Editar</button>
         </div>
       </div>
     </div>`;
@@ -691,7 +735,7 @@ function renderRoteiros() {
   }
   const comRoteiro = db.gravacoes.filter(g => g.roteiro && g.roteiro.trim()).length;
   const feitas = db.gravacoes.filter(g => g.feita).length;
-  const resumo = `<div class="roteiro-resumo">📝 ${comRoteiro} de ${db.gravacoes.length} com roteiro · ✅ ${feitas} feita(s) com sucesso</div>`;
+  const resumo = `<div class="roteiro-resumo"><span><b>${comRoteiro}</b> de ${db.gravacoes.length} com roteiro</span><span><b>${feitas}</b> feita(s) com sucesso</span></div>`;
   let list = db.gravacoes.slice().sort((a,b) => {
     if (!a.data && !b.data) return 0;
     if (!a.data) return 1;
@@ -709,20 +753,20 @@ function renderRoteiros() {
       <div class="card-head">
         <div style="flex:1; min-width:0;">
           <div class="title">${esc(g.titulo)}</div>
-          <div class="when">📅 ${fmtData(g.data,g.hora)}</div>
+          <div class="when">${IC.cal} ${fmtData(g.data,g.hora)}</div>
         </div>
         <div class="card-actions">
           ${tem
             ? '<span class="badge gravada">Roteiro pronto</span>'
             : '<span class="badge agendada">A escrever</span>'}
-          <button class="btn small" onclick="openRoteiro('${g.id}')">${tem?'Abrir / editar':'Escrever'}</button>
-          ${tem?`<button class="btn small secondary" onclick="gerarPdfRoteiro('${g.id}')">📄 PDF</button>`:''}
+          <button class="btn small" onclick="openRoteiro('${g.id}')">${ICB.pen} ${tem?'Abrir / editar':'Escrever'}</button>
+          ${tem?`<button class="btn small secondary" onclick="gerarPdfRoteiro('${g.id}')">${ICB.pdf} PDF</button>`:''}
         </div>
       </div>
       ${tem
-        ? `<div class="roteiro-preview">${preview}</div><div class="roteiro-meta">${g.tema&&g.tema.trim()?`<span>🎬 ${esc(g.tema.trim().slice(0,70))}${g.tema.trim().length>70?'…':''}</span>`:''}<span>📄 ${palavras} palavra(s)</span><span>✍️ ${txt.length} caracteres</span></div>`
+        ? `<div class="roteiro-preview">${preview}</div><div class="roteiro-meta">${g.tema&&g.tema.trim()?`<span>${IC.clap} ${esc(g.tema.trim().slice(0,70))}${g.tema.trim().length>70?'…':''}</span>`:''}<span>${IC.words} ${palavras} palavra(s)</span><span>${txt.length} caracteres</span></div>`
         : '<div class="roteiro-preview" style="font-style:italic;">Ainda sem texto — clique em “Escrever” para começar.</div>'}
-      <div><label class="check-feita"><input type="checkbox" ${g.feita?'checked':''} onclick="toggleFeita('${g.id}', this.checked)"> ✅ Gravação feita com sucesso</label></div>
+      <div><label class="check-feita"><input type="checkbox" ${g.feita?'checked':''} onclick="toggleFeita('${g.id}', this.checked)"> Gravação feita com sucesso</label></div>
     </div>`;
   }).join('');
 }
@@ -846,12 +890,12 @@ function renderHome(){
   el.innerHTML = `
     <div class="cal-top">
       <div class="cal-nav">
-        <button class="btn ghost small" onclick="homeNav(-1)">‹ mês</button>
-        <button class="btn ghost small" onclick="homeNav(1)">mês ›</button>
+        <button class="btn ghost small icon-only" aria-label="Mês anterior" onclick="homeNav(-1)">${ICB.left}</button>
+        <button class="btn ghost small icon-only" aria-label="Próximo mês" onclick="homeNav(1)">${ICB.right}</button>
         <button class="btn ghost small" onclick="homeHoje()">Hoje</button>
       </div>
       <h2 class="cal-mes">${MESES_PT[homeMes]} de ${homeAno}</h2>
-      <button class="btn" style="margin-left:auto" onclick="openGravacao()">+ Nova gravação</button>
+      <button class="btn btn-nova" style="margin-left:auto" onclick="openGravacao()">${ICB.plus} Nova gravação</button>
     </div>
     <div class="cal-wrap"><div class="cal-head">${head}</div><div class="cal-grid">${cells}</div></div>
     <div class="cal-legenda">Toque num <b>dia</b> para agendar uma gravação, ou num <b>evento</b> para editar.
@@ -880,7 +924,7 @@ function renderAgenda() {
     return;
   }
   el.innerHTML = list.map(g => {
-    const topics = (g.topicos||[]).map(t=>`<span class="chip topic">🎬 ${esc(t)}</span>`).join('');
+    const topics = (g.topicos||[]).map(t=>`<span class="chip topic">${esc(t)}</span>`).join('');
     const people = (g.pessoas||[]).map(id => {
       const p = pessoaById(id); if (!p) return '';
       return `<span class="chip"><span class="dot" style="background:${p.cor}"></span>${esc(p.nome)}</span>`;
@@ -889,12 +933,12 @@ function renderAgenda() {
       <div class="card-head">
         <div>
           <div class="title">${esc(g.titulo)}</div>
-          <div class="when">📅 ${fmtData(g.data,g.hora)}</div>
+          <div class="when">${IC.cal} ${fmtData(g.data,g.hora)}</div>
         </div>
         <div class="card-actions">
           <span class="badge ${g.status}">${g.status[0].toUpperCase()+g.status.slice(1)}</span>
-          <button class="btn secondary small" onclick="openRoteiro('${g.id}')">📝 Roteiro${g.roteiro && g.roteiro.trim() ? ' ✓' : ''}</button>
-          <button class="btn secondary small" onclick="openGravacao('${g.id}')">Editar</button>
+          <button class="btn secondary small" onclick="openRoteiro('${g.id}')">${ICB.doc} Roteiro${g.roteiro && g.roteiro.trim() ? ' ✓' : ''}</button>
+          <button class="btn secondary small" onclick="openGravacao('${g.id}')">${ICB.pen} Editar</button>
         </div>
       </div>
       ${g.notas?`<div style="color:var(--muted);font-size:13px;margin-top:8px">${esc(g.notas)}</div>`:''}
