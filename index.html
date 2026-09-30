@@ -305,6 +305,25 @@
   .badge.corte-st.edicao { background:var(--accent-soft); color:var(--accent-text); }
   .badge.corte-st.pronto { background:var(--surface-2); color:var(--text); }
   .badge.corte-st.postado { background:var(--green-soft); color:var(--green); }
+  #statsCortes { grid-template-columns: repeat(5, minmax(0,1fr)); }
+  .badge.corte-st.aprovar { background:rgba(187,208,237,.22); color:#fff; box-shadow:0 0 0 1px rgba(187,208,237,.45) inset; }
+  .card.corte.aprovar::before { background:var(--accent-2); }
+  .corte-corpo { display:flex; gap:18px; align-items:flex-start; margin-top:12px; }
+  .corte-corpo .corte-info { flex:1; min-width:0; }
+  .corte-video { width:200px; aspect-ratio:9/16; flex:none; border-radius:14px; background:#000; border:1px solid var(--border); object-fit:contain; display:block; }
+  .corte-aprova { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .corte-aprova .btn.ok { background:var(--green); color:#062414; }
+  .corte-baixar { font-size:13px; }
+  @media (max-width:640px){
+    .corte-corpo { flex-direction:column; align-items:stretch; }
+    .corte-video { width:100%; max-width:300px; margin:0 auto; }
+  }
+  @media (max-width:900px){
+    #statsCortes { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  }
+  @media (max-width:640px){
+    #statsCortes { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
   a.chip { color:var(--text); text-decoration:none; } a.chip:hover { border-color:var(--accent); }
   @media (max-width:980px){ header .tabs .tab { padding:0 11px; } }
 
@@ -401,7 +420,7 @@
       <button class="btn" onclick="openCorte()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Novo corte</button>
       <input type="search" id="buscaCorte" placeholder="Buscar por título, mensagem ou pastor..." oninput="renderCortes()">
       <select id="filtroCorte" onchange="renderCortes()">
-        <option value="">Todos os status</option><option value="afazer">A fazer</option><option value="edicao">Em edição</option><option value="pronto">Pronto</option><option value="postado">Postado</option>
+        <option value="">Todos os status</option><option value="aprovar">Pra aprovar</option><option value="afazer">A fazer</option><option value="edicao">Em edição</option><option value="pronto">Pronto</option><option value="postado">Postado</option>
       </select>
     </div>
     <div id="lista-cortes"></div>
@@ -425,8 +444,9 @@
     </div>
     <div class="row">
       <div class="field"><label>Onde postar</label><select id="coPlat"><option value="ambos">Instagram e Shorts</option><option value="instagram">Instagram</option><option value="shorts">Shorts do YouTube</option></select></div>
-      <div class="field"><label>Status</label><select id="coStatus"><option value="afazer">A fazer</option><option value="edicao">Em edição</option><option value="pronto">Pronto</option><option value="postado">Postado</option></select></div>
+      <div class="field"><label>Status</label><select id="coStatus"><option value="aprovar">Pra aprovar</option><option value="afazer">A fazer</option><option value="edicao">Em edição</option><option value="pronto">Pronto</option><option value="postado">Postado</option></select></div>
     </div>
+    <div class="field"><label>Vídeo do corte (arquivo pra aprovação)</label><input type="text" id="coVideo" placeholder="cortes/2026-09-27-manha/01-exemplo.mp4 ou https://..."></div>
     <div class="field"><label>Link do corte postado</label><input type="url" id="coPostado" placeholder="https://instagram.com/... ou https://youtube.com/shorts/..."></div>
     <div class="field"><label>Observações</label><textarea id="coNotas" rows="2" placeholder="Legenda, hashtags, ideia de capa..."></textarea></div>
     <div class="modal-actions">
@@ -1095,14 +1115,14 @@ function renderAgenda() {
 }
 
 /* ---------- Cortes para Instagram e Shorts (mensagens dos pastores) ---------- */
-const CORTE_ST = { afazer:'A fazer', edicao:'Em edição', pronto:'Pronto', postado:'Postado' };
+const CORTE_ST = { aprovar:'Pra aprovar', afazer:'A fazer', edicao:'Em edição', pronto:'Aprovado', postado:'Postado' };
 const CORTE_PL = { ambos:'Instagram e Shorts', instagram:'Instagram', shorts:'Shorts do YouTube' };
 function openCorte(id){
   const c = id ? (db.cortes||[]).find(x=>x.id===id) : null;
   document.getElementById('corteTitulo').textContent = c ? 'Editar corte' : 'Novo corte';
   const v = (k, val) => { document.getElementById(k).value = val || ''; };
   v('coId', c&&c.id); v('coTitulo', c&&c.titulo); v('coMensagem', c&&c.mensagem); v('coPastor', c&&c.pastor); v('coLink', c&&c.link);
-  v('coInicio', c&&c.inicio); v('coFim', c&&c.fim); v('coPostado', c&&c.postado); v('coNotas', c&&c.notas);
+  v('coInicio', c&&c.inicio); v('coFim', c&&c.fim); v('coPostado', c&&c.postado); v('coNotas', c&&c.notas); v('coVideo', c&&c.video);
   document.getElementById('coPlat').value = (c&&c.plataforma) || 'ambos';
   document.getElementById('coStatus').value = (c&&c.status) || 'afazer';
   document.getElementById('btnExcluirCorte').style.display = c ? '' : 'none';
@@ -1116,7 +1136,7 @@ function salvarCorte(){
   const titulo = g('coTitulo');
   if (!titulo) { alert('Dê um título para o corte.'); return; }
   const obj = { titulo, mensagem:g('coMensagem'), pastor:g('coPastor'), link:g('coLink'), inicio:g('coInicio'), fim:g('coFim'),
-                plataforma:g('coPlat'), status:g('coStatus'), postado:g('coPostado'), notas:g('coNotas') };
+                plataforma:g('coPlat'), status:g('coStatus'), postado:g('coPostado'), notas:g('coNotas'), video:g('coVideo') };
   if (!Array.isArray(db.cortes)) db.cortes = [];
   const id = g('coId');
   if (id) Object.assign(db.cortes.find(x=>x.id===id), obj);
@@ -1129,6 +1149,20 @@ function excluirCorte(){
   db.cortes = (db.cortes||[]).filter(x=>x.id!==id);
   save(); closeCorte(); renderCortes(); renderMapa();
 }
+function aprovarCorte(id){
+  const c = (db.cortes||[]).find(x=>x.id===id); if (!c) return;
+  c.status = 'pronto'; c.aprovado = new Date().toISOString().slice(0,10);
+  save(); renderCortes(); renderMapa();
+}
+function ajusteCorte(id){
+  const c = (db.cortes||[]).find(x=>x.id===id); if (!c) return;
+  const o = prompt('O que precisa mudar nesse corte?');
+  if (o === null) return;
+  const d = new Date().toLocaleDateString('pt-BR');
+  c.status = 'edicao';
+  c.notas = ((c.notas ? c.notas + String.fromCharCode(10) : '') +`Ajuste pedido (${d}): ${o.trim() || 'sem detalhe'}`);
+  save(); renderCortes(); renderMapa();
+}
 function irCortes(status){ navegar('cortes'); const f=document.getElementById('filtroCorte'); if (f) f.value = status||''; renderCortes(); }
 function renderCortes(){
   const el = document.getElementById('lista-cortes'); if (!el) return;
@@ -1136,17 +1170,18 @@ function renderCortes(){
   const cnt = k => cs.filter(x=>x.status===k).length;
   const st = document.getElementById('statsCortes');
   if (st) st.innerHTML = `
+    <div class="stat"><div class="num" style="color:#fff">${cnt('aprovar')}</div><div class="lbl">Pra aprovar</div></div>
     <div class="stat"><div class="num" style="color:var(--amber)">${cnt('afazer')}</div><div class="lbl">A fazer</div></div>
     <div class="stat"><div class="num" style="color:var(--accent-text)">${cnt('edicao')}</div><div class="lbl">Em edição</div></div>
-    <div class="stat"><div class="num">${cnt('pronto')}</div><div class="lbl">Prontos</div></div>
+    <div class="stat"><div class="num">${cnt('pronto')}</div><div class="lbl">Aprovados</div></div>
     <div class="stat"><div class="num" style="color:var(--green)">${cnt('postado')}</div><div class="lbl">Postados</div></div>`;
   const busca = (document.getElementById('buscaCorte').value||'').toLowerCase();
   const fs = document.getElementById('filtroCorte').value;
   let list = cs.slice();
   if (fs) list = list.filter(x=>x.status===fs);
   if (busca) list = list.filter(x => ((x.titulo||'')+' '+(x.mensagem||'')+' '+(x.pastor||'')).toLowerCase().includes(busca));
-  const ordem = { afazer:0, edicao:1, pronto:2, postado:3 };
-  list.sort((a,b) => (ordem[a.status]??9)-(ordem[b.status]??9) || (b.criado||'').localeCompare(a.criado||''));
+  const ordem = { aprovar:0, afazer:1, edicao:2, pronto:3, postado:4 };
+  list.sort((a,b) => (ordem[a.status]??9)-(ordem[b.status]??9) || (b.criado||'').localeCompare(a.criado||'') || (a.ordem||0)-(b.ordem||0));
   if (!cs.length) { el.innerHTML = '<div class="empty">Nenhum corte ainda.<br>Clique em <b>Novo corte</b> pra registrar um trecho de mensagem pra Instagram ou Shorts.</div>'; return; }
   if (!list.length) { el.innerHTML = '<div class="empty">Nenhum corte encontrado.</div>'; return; }
   el.innerHTML = list.map(c => {
@@ -1162,13 +1197,23 @@ function renderCortes(){
           <button class="btn secondary small" onclick="openCorte('${c.id}')">${ICB.pen} Editar</button>
         </div>
       </div>
-      <div class="chips">
-        <span class="chip topic">${CORTE_PL[c.plataforma]||CORTE_PL.ambos}</span>
-        ${tr?`<span class="chip">Trecho ${tr}</span>`:''}
-        ${c.link?`<a class="chip" href="${esc(c.link)}" target="_blank" rel="noopener">Vídeo original ↗</a>`:''}
-        ${c.postado?`<a class="chip" href="${esc(c.postado)}" target="_blank" rel="noopener">Ver postado ↗</a>`:''}
+      <div class="corte-corpo">
+        ${c.video?`<video class="corte-video" src="${esc(c.video)}" controls playsinline preload="metadata"></video>`:''}
+        <div class="corte-info">
+          <div class="chips">
+            <span class="chip topic">${CORTE_PL[c.plataforma]||CORTE_PL.ambos}</span>
+            ${tr?`<span class="chip">Trecho ${tr}</span>`:''}
+            ${c.link?`<a class="chip" href="${esc(c.link)}" target="_blank" rel="noopener">Vídeo original ↗</a>`:''}
+            ${c.video?`<a class="chip corte-baixar" href="${esc(c.video)}" download>Baixar vídeo ↓</a>`:''}
+            ${c.postado?`<a class="chip" href="${esc(c.postado)}" target="_blank" rel="noopener">Ver postado ↗</a>`:''}
+          </div>
+          ${c.notas?`<div class="roteiro-preview" style="max-height:none; white-space:pre-line">${esc(c.notas)}</div>`:''}
+          ${c.status==='aprovar'?`<div class="corte-aprova">
+            <button class="btn ok small" onclick="aprovarCorte('${c.id}')">✓ Aprovar</button>
+            <button class="btn secondary small" onclick="ajusteCorte('${c.id}')">Pedir ajuste</button>
+          </div>`:''}
+        </div>
       </div>
-      ${c.notas?`<div class="roteiro-preview" style="max-height:none">${esc(c.notas)}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -1218,6 +1263,7 @@ function renderMapa(){
       { t:'Gravadas com sucesso', act:"navegar('roteiro')" },
       { t:'Novo roteiro', mais:true, act:'novoRoteiro()' } ] },
     { id:'cortes', t:'Cortes', sub:'Instagram e Shorts', lado:'dir', folhas:[
+      { t:'Pra aprovar', act:"irCortes('aprovar')" },
       { t:'A fazer', act:"irCortes('afazer')" },
       { t:'Em edição', act:"irCortes('edicao')" },
       { t:'Postados', act:"irCortes('postado')" },
