@@ -321,6 +321,18 @@
   .corte-item .t { font-weight:700; line-height:1.25; }
   .corte-item .leg { font-size:13px; color:var(--muted); white-space:pre-line; }
   .culto-espera { margin-top:14px; color:var(--muted); }
+  .cultos-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:16px; }
+  .culto-tile { display:flex; flex-direction:column; text-align:left; padding:0; border:1px solid var(--border); background:var(--surface); border-radius:18px; overflow:hidden; cursor:pointer; color:inherit; font:inherit; transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+  .culto-capa { position:relative; aspect-ratio:16/9; background:#0E1A30 center/cover no-repeat; }
+  .culto-capa img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+  .culto-capa .badge { position:absolute; left:10px; top:10px; z-index:1; backdrop-filter:blur(6px); background:rgba(11,22,40,.88) !important; }
+  .culto-tile-txt { padding:12px 14px 14px; }
+  .culto-tile-txt .t { font-weight:700; line-height:1.3; }
+  .culto-tile-txt .p { font-size:13px; color:var(--muted); margin-top:4px; }
+  .culto-voltar { margin-bottom:14px; }
+  @media (hover:hover) and (pointer:fine){ .culto-tile:hover { transform:scale(1.03); border-color:var(--accent-2); box-shadow:0 14px 30px -14px rgba(0,0,0,.6); } }
+  .culto-tile:active { transform:scale(.97); border-color:var(--accent-2); }
+  @media (max-width:640px){ .cultos-grid { grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; } .culto-tile-txt { padding:10px; } .culto-tile-txt .t { font-size:14px; } }
   @media (max-width:640px){ .culto-form { flex-direction:column; } .cortes-grid { grid-template-columns:1fr; } .corte-item .corte-video { max-width:300px; margin:0 auto; } }
   .badge.corte-st.aprovar { background:rgba(187,208,237,.22); color:#fff; box-shadow:0 0 0 1px rgba(187,208,237,.45) inset; }
   .card.corte.aprovar::before { background:var(--accent-2); }
@@ -1221,12 +1233,37 @@ function corteHTML(c){
     <div class="culto-acoes">${acoes}${c.video?`<a class="chip corte-baixar" href="${esc(c.video)}" download>Baixar ↓</a>`:''}</div>
   </div>`;
 }
+let cultoAberto = null;
+function abrirCulto(id){ cultoAberto = id; renderCortes(); window.scrollTo({ top:0, behavior:'smooth' }); }
+function fecharCulto(){ cultoAberto = null; renderCortes(); window.scrollTo({ top:0, behavior:'smooth' }); }
+function cultoTile(cu){
+  const cs = (db.cortes||[]).filter(c => c.culto === cu.id);
+  const pronto = cu.status === 'pronto';
+  const pend = cs.some(c => (c.status||'aprovar') === 'aprovar');
+  const data = cu.data ? cu.data.split('-').reverse().join('/') : '';
+  const selo = !pronto ? '<span class="badge corte-st afazer">Aguardando cortes</span>'
+             : pend ? '<span class="badge corte-st aprovar">Pra aprovar</span>' : '<span class="badge corte-st pronto">Cortes prontos</span>';
+  return `<button class="culto-tile" onclick="abrirCulto('${cu.id}')">
+    <div class="culto-capa"><img src="https://i.ytimg.com/vi/${esc(cu.yt)}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">${selo}</div>
+    <div class="culto-tile-txt"><div class="t">${esc(cu.titulo || 'Culto enviado')}</div><div class="p">${[cu.pastor, data].filter(Boolean).map(esc).join(' · ') || 'Aguardando os cortes'}</div></div>
+  </button>`;
+}
 function renderCortes(){
   const el = document.getElementById('lista-cortes'); if (!el) return;
   const cultos = (db.cultos||[]).slice().sort((a,b) => (b.data||b.criado||'').localeCompare(a.data||a.criado||''));
   const cortes = db.cortes || [];
   const ordemCorte = (a,b) => (a.ordem||0)-(b.ordem||0);
-  let html = cultos.map(cu => {
+  const aberto = cultos.find(c => c.id === cultoAberto);
+  if (!aberto) cultoAberto = null;
+  const novo = document.querySelector('.culto-novo'); if (novo) novo.style.display = aberto ? 'none' : '';
+  if (!aberto) {
+    let lista = cultos.length ? `<div class="cultos-grid">${cultos.map(cultoTile).join('')}</div>` : '';
+    const soltos = cortes.filter(c => !c.culto || !cultos.some(cu => cu.id === c.culto)).sort(ordemCorte);
+    if (soltos.length) lista += `<div class="card culto" style="margin-top:18px"><div class="title">Outros cortes</div><div class="culto-sec"><div class="cortes-grid">${soltos.map(corteHTML).join('')}</div></div></div>`;
+    el.innerHTML = lista || '<div class="empty">Nenhum culto ainda.<br>Cole o link do YouTube acima pra começar.</div>';
+    return;
+  }
+  let html = '<button class="btn secondary small culto-voltar" onclick="fecharCulto()">← Todos os cultos</button>' + [aberto].map(cu => {
     const cs = cortes.filter(c => c.culto === cu.id).sort(ordemCorte);
     const pronto = cu.status === 'pronto';
     const quando = [cu.pastor, cu.data ? cu.data.split('-').reverse().join('/') : ''].filter(Boolean).map(esc).join(' · ');
@@ -1263,9 +1300,7 @@ function renderCortes(){
       </div>`}
     </div>`;
   }).join('');
-  const soltos = cortes.filter(c => !c.culto || !cultos.some(cu => cu.id === c.culto)).sort(ordemCorte);
-  if (soltos.length) html += `<div class="card culto"><div class="title">Outros cortes</div><div class="culto-sec"><div class="cortes-grid">${soltos.map(corteHTML).join('')}</div></div></div>`;
-  el.innerHTML = html || '<div class="empty">Nenhum culto ainda.<br>Cole o link do YouTube acima pra começar.</div>';
+  el.innerHTML = html;
 }
 
 /* ---------- Início: mapa mental interativo ---------- */
