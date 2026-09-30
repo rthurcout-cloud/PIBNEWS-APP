@@ -312,7 +312,7 @@
   .culto-sec { margin-top:20px; }
   .culto-sec h3 { font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-text); margin:0 0 10px; font-weight:700; }
   .culto-video { position:relative; width:100%; max-width:720px; aspect-ratio:16/9; border-radius:14px; overflow:hidden; border:1px solid var(--border); background:#000; }
-  .culto-video iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .culto-video iframe, .culto-video video { position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; }
   .culto-desc { width:100%; min-height:220px; resize:vertical; font:inherit; font-size:14px; line-height:1.5; }
   .culto-acoes { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center; }
   .cortes-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px; }
@@ -1247,8 +1247,10 @@ function renderCortes(){
       ${!pronto ? `<div class="culto-espera">Link recebido. A mensagem na íntegra, a descrição e os cortes aparecem aqui assim que ficarem prontos. <a class="chip" href="${esc(cu.link)}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>` : `
       <div class="culto-sec">
         <h3>Mensagem na íntegra${cu.inicio?` · ${esc(cu.inicio)} → ${esc(cu.fim||'')}`:''}</h3>
-        <div class="culto-video"><iframe src="${emb}" title="Mensagem na íntegra" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
-        <div class="culto-acoes"><a class="chip" href="${abrir}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>
+        <div class="culto-video">${cu.video
+          ? `<video src="${esc(cu.video)}" controls playsinline preload="metadata"></video>`
+          : `<iframe src="${emb}" title="Mensagem na íntegra" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`}</div>
+        <div class="culto-acoes">${cu.video?`<a class="chip" href="${esc(cu.video)}" download>Baixar mensagem ↓</a>`:''}<a class="chip" href="${abrir}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>
       </div>
       ${cu.descricao?`<div class="culto-sec">
         <h3>Descrição pro YouTube</h3>
