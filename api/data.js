@@ -1,7 +1,7 @@
 // Função serverless do Vercel: lê e grava os dados compartilhados no Vercel KV (Upstash Redis).
 // Endpoints:
-//   GET  /api/data  -> retorna { gravacoes, pessoas }
-//   POST /api/data  -> salva  { gravacoes, pessoas }
+//   GET  /api/data  -> retorna { gravacoes, pessoas, cortes }
+//   POST /api/data  -> salva  { gravacoes, pessoas, cortes }
 // Segurança: se a variável de ambiente ACCESS_CODE estiver definida, exige o header x-access-code.
 
 const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -41,9 +41,17 @@ module.exports = async (req, res) => {
       let body = req.body;
       if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = null; } }
       if (!body || typeof body !== 'object') { res.status(400).json({ error: 'body_invalido' }); return; }
+      // cortes (Instagram/Shorts): se quem salvou não mandou (versão antiga do app), mantém os que já estavam guardados
+      let cortes = Array.isArray(body.cortes) ? body.cortes : null;
+      if (!cortes) {
+        const atual = await kv(['GET', DATA_KEY]);
+        const d = atual && atual.result ? JSON.parse(atual.result) : {};
+        cortes = Array.isArray(d.cortes) ? d.cortes : [];
+      }
       const safe = {
         gravacoes: Array.isArray(body.gravacoes) ? body.gravacoes : [],
-        pessoas: Array.isArray(body.pessoas) ? body.pessoas : []
+        pessoas: Array.isArray(body.pessoas) ? body.pessoas : [],
+        cortes
       };
       await kv(['SET', DATA_KEY, JSON.stringify(safe)]);
       res.status(200).json({ ok: true });

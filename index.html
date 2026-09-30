@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Gravações PIBN</title>
-<meta name="theme-color" content="#121417">
+<meta name="theme-color" content="#0B0B0C">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,16 +17,17 @@
 <style>
   /* Visual novo (27/09/2026): base escura igual ao Controle de Carros, destaque roxo PIB News, botões próprios */
   :root {
-    --bg: #121417;
-    --surface: #1C1F24;
-    --surface-2: #23272E;
-    --border: #2C3038;
+    --bg: #0B0B0C;
+    --surface: #161618;
+    --surface-2: #1F1F22;
+    --border: #2E2E33;
     --text: #ECEDEE;
     --muted: #A3AAB3;
-    --accent: #7C5CFA;          /* fundo de botão (texto branco passa em contraste) */
-    --accent-2: #9A80FF;        /* borda / brilho */
-    --accent-text: #B4A4FF;     /* texto roxo sobre fundo escuro */
-    --accent-soft: rgba(124,92,250,.16);
+    --accent: #F2711C;          /* laranja: fundo de botão (texto escuro por cima) */
+    --accent-2: #FF9447;        /* laranja claro: borda / brilho */
+    --accent-text: #FFA866;     /* texto laranja sobre fundo escuro */
+    --ink: #1A0C02;
+    --accent-soft: rgba(242,113,28,.16);
     --rec: #FF4D5E;
     --green: #4FD18B;
     --green-soft: rgba(79,209,139,.14);
@@ -76,7 +77,7 @@
     transition: background .18s, color .18s;
   }
   .tab:hover { color: var(--text); background: var(--surface-2); }
-  .tab.active { background: var(--accent); color: #fff; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 6px 16px -8px rgba(124,92,250,.9); }
+  .tab.active { background: var(--accent); color: var(--ink); font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 6px 16px -8px rgba(242,113,28,.9); }
 
   /* ---------- Menu de baixo (celular) ---------- */
   .bnav { display: none; }
@@ -88,15 +89,15 @@
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     min-height: 44px; padding: 0 18px; border-radius: 14px;
     font-family: inherit; font-size: 14px; font-weight: 600; letter-spacing: .1px;
-    background: var(--accent); color: #fff; border: 1px solid var(--accent-2);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 8px 20px -10px rgba(124,92,250,.95);
+    background: var(--accent); color: var(--ink); border: 1px solid var(--accent-2);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 8px 20px -10px rgba(242,113,28,.95);
     cursor: pointer; transition: transform .14s var(--ease), filter .18s, box-shadow .18s, background .18s, border-color .18s;
   }
-  .btn:hover { filter: brightness(1.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 10px 26px -10px rgba(124,92,250,1); }
+  .btn:hover { filter: brightness(1.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 10px 26px -10px rgba(242,113,28,1); }
   .btn:active { transform: scale(.97); }
   .btn:focus-visible, .tab:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
   .btn.secondary { background: var(--surface-2); border-color: var(--border); color: var(--text); font-weight: 500; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
-  .btn.secondary:hover { border-color: #444a55; background: #2A2F37; filter: none; }
+  .btn.secondary:hover { border-color: #4A4A52; background: #28282C; filter: none; }
   .btn.ghost { background: transparent; border-color: var(--border); color: var(--text); font-weight: 500; box-shadow: none; }
   .btn.ghost:hover { background: var(--surface-2); filter: none; }
   .btn.danger { background: var(--red-soft); color: var(--red); border-color: rgba(240,113,103,.4); box-shadow: none; }
@@ -114,13 +115,13 @@
   .cal-head, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 8px; min-width: 700px; }
   .cal-head div { text-align: center; color: var(--muted); font-size: 11.5px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; padding: 2px 0 4px; }
   .cal-cell { min-height: 100px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px; cursor: pointer; transition: border-color .15s, background .15s; }
-  .cal-cell:hover { border-color: #444a55; background: #20242A; }
+  .cal-cell:hover { border-color: #4A4A52; background: #1C1C1F; }
   .cal-cell.vazio { background: none; border: none; cursor: default; }
   .cal-cell.hoje { border-color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
   .cal-num { font-family: var(--disp); font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
-  .cal-cell.hoje .cal-num { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 99px; background: var(--accent); color: #fff; }
+  .cal-cell.hoje .cal-num { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 99px; background: var(--accent); color: var(--ink); }
   .cal-evs { display: flex; flex-direction: column; gap: 4px; }
-  .cal-ev { font-size: 11.5px; line-height: 1.3; padding: 3px 7px; border-radius: 7px; background: var(--accent-soft); color: #DCD4FF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  .cal-ev { font-size: 11.5px; line-height: 1.3; padding: 3px 7px; border-radius: 7px; background: var(--accent-soft); color: #FFD8BD; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
   .cal-ev:hover { filter: brightness(1.2); }
   .cal-ev.gravada { background: var(--green-soft); color: #C9F2DC; }
   .cal-ev.cancelada { background: var(--surface-2); color: var(--muted); text-decoration: line-through; }
@@ -135,7 +136,7 @@
     padding: 10px 13px; min-height: 44px; border-radius: 12px; font-size: 16px; font-family: inherit;
     transition: border-color .18s, box-shadow .18s;
   }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(124,92,250,.22); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(242,113,28,.22); }
   input::placeholder, textarea::placeholder { color: #6B727C; }
   input[type="date"], input[type="time"] { color-scheme: dark; }
   input[type="search"] { min-width: 220px; flex: 1; max-width: 420px; }
@@ -167,7 +168,7 @@
   .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; padding: 4px 11px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; }
   .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .chip.topic { background: var(--accent-soft); border-color: rgba(154,128,255,.35); color: #DCD4FF; }
+  .chip.topic { background: var(--accent-soft); border-color: rgba(255,148,71,.35); color: #FFD8BD; }
   .section-label { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin: 14px 0 4px; }
   .empty { text-align: center; color: var(--muted); padding: 60px 20px; }
   .empty .big { display: none; }
@@ -199,8 +200,8 @@
   .people-pick input { display: none; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; flex-wrap: wrap; }
   a.link { color: var(--accent-text); cursor: pointer; text-decoration: none; font-size: 13px; }
-  .topic-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); border: 1px solid rgba(154,128,255,.35); border-radius: 99px; padding: 5px 6px 5px 12px; font-size: 13px; margin: 0 6px 6px 0; }
-  .topic-tag button { background: rgba(255,255,255,.08); border: none; color: #DCD4FF; cursor: pointer; font-size: 12px; line-height: 1; width: 22px; height: 22px; border-radius: 99px; }
+  .topic-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); border: 1px solid rgba(255,148,71,.35); border-radius: 99px; padding: 5px 6px 5px 12px; font-size: 13px; margin: 0 6px 6px 0; }
+  .topic-tag button { background: rgba(255,255,255,.08); border: none; color: #FFD8BD; cursor: pointer; font-size: 12px; line-height: 1; width: 22px; height: 22px; border-radius: 99px; }
   .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
 
   /* ---------- Celular ---------- */
@@ -228,6 +229,84 @@
     input[type="search"] { max-width: none; }
   }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  /* ===== Início em mapa mental (30/09/2026) ===== */
+  .mm-wrap { position:relative; width:min(1320px, calc(100vw - 40px)); left:50%; transform:translateX(-50%); }
+  .mm { position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(270px,310px) minmax(0,1fr); gap:0 56px; align-items:center; min-height:560px; padding:10px 0 20px; }
+  .mm-linhas { position:absolute; left:0; top:0; pointer-events:none; overflow:visible; z-index:0; }
+  .mm-l { fill:none; stroke:#3A3A40; stroke-width:2; transition:stroke .2s; }
+  .mm-l.n1 { stroke:#55432F; stroke-width:2.5; }
+  .mm-f { fill:none; stroke:var(--accent-2); stroke-width:2; stroke-dasharray:3 22; opacity:0; transition:opacity .2s; }
+  .mm-l.on { stroke:var(--accent); }
+  .mm-f.on { opacity:1; animation:mmfluxo 1.2s linear infinite; filter:drop-shadow(0 0 4px rgba(242,113,28,.9)); }
+  @keyframes mmfluxo { to { stroke-dashoffset:-25; } }
+  .mm-col { position:relative; z-index:1; display:flex; flex-direction:column; gap:30px; min-width:0; }
+  .mm-ramo { display:flex; align-items:center; gap:30px; }
+  .mm-ramo.esq { flex-direction:row-reverse; }
+  .mm-no { font-family:inherit; cursor:pointer; color:var(--text); transition:transform .18s var(--ease), border-color .18s, background .18s, box-shadow .18s; }
+  .mm-no.n1 { display:flex; align-items:center; gap:12px; min-width:190px; padding:12px 14px; border-radius:18px; text-align:left;
+    background:linear-gradient(160deg,#1C1C1F,#131315); border:1px solid #2E2E33; box-shadow:0 12px 26px -18px rgba(0,0,0,.9); }
+  .mm-no.n1:hover { transform:translateY(-2px); border-color:rgba(242,113,28,.6); box-shadow:0 0 26px -10px rgba(242,113,28,.8); }
+  .mm-ramo.aberto > .n1 { border-color:var(--accent); box-shadow:0 0 0 1px rgba(242,113,28,.35) inset, 0 0 26px -12px rgba(242,113,28,.9); }
+  .mm-no.n1 .pl { width:42px; height:42px; flex:0 0 42px; border-radius:13px; display:flex; align-items:center; justify-content:center; color:var(--accent); background:rgba(242,113,28,.12); border:1px solid rgba(242,113,28,.35); }
+  .mm-ramo.aberto > .n1 .pl { background:var(--accent); color:var(--ink); }
+  .mm-ic { width:20px; height:20px; } .mm-ic.s { width:15px; height:15px; }
+  .mm-no.n1 .tx { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .mm-no.n1 .tx b { font-family:var(--disp); font-size:17px; font-weight:700; }
+  .mm-no.n1 .tx small { font-size:12px; color:var(--muted); }
+  .mm-no.n1 .ch { width:18px; height:18px; color:var(--muted); transition:transform .25s var(--ease); }
+  .mm-ramo.aberto > .n1 .ch { transform:rotate(90deg); color:var(--accent); }
+  .mm-ramo.esq .n1 .ch { order:-1; transform:rotate(180deg); } .mm-ramo.esq.aberto .n1 .ch { transform:rotate(90deg); }
+  .mm-folhas { display:flex; flex-direction:column; gap:8px; }
+  .mm-ramo:not(.aberto) .mm-folhas { display:none; }
+  .mm-ramo.aberto .mm-folhas > * { animation:mmsai .32s var(--ease) both; }
+  .mm-ramo.aberto .mm-folhas > *:nth-child(2) { animation-delay:.04s; } .mm-ramo.aberto .mm-folhas > *:nth-child(3) { animation-delay:.08s; } .mm-ramo.aberto .mm-folhas > *:nth-child(4) { animation-delay:.12s; }
+  @keyframes mmsai { from { opacity:0; transform:scale(.9) translateX(var(--mmdx,-10px)); } to { opacity:1; transform:none; } }
+  .mm-ramo.esq .mm-folhas { --mmdx:10px; align-items:flex-end; }
+  .mm-no.n2 { display:inline-flex; align-items:center; gap:8px; min-height:40px; padding:0 14px; border-radius:99px; font-size:13.5px; font-weight:500;
+    background:#1F1F22; border:1px solid #34343A; white-space:nowrap; max-width:205px; }
+  .mm-no.n2 .t { overflow:hidden; text-overflow:ellipsis; }
+  .mm-no.n2 .n { min-width:24px; padding:1px 8px; border-radius:99px; text-align:center; font-weight:700; font-size:12px; color:var(--accent-text); background:rgba(242,113,28,.14); overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+  .mm-no.n2:hover { border-color:var(--accent); transform:translateX(3px); background:#252528; }
+  .mm-ramo.esq .mm-no.n2:hover { transform:translateX(-3px); }
+  .mm-no.n2.mais { border-style:dashed; border-color:rgba(242,113,28,.6); color:var(--accent-text); }
+  .mm-centro { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; padding:28px 22px 22px; border-radius:28px;
+    background:radial-gradient(circle at 50% 18%, rgba(242,113,28,.20), #111113 62%); border:1px solid rgba(242,113,28,.55); box-shadow:0 0 50px -16px rgba(242,113,28,.8), 0 30px 60px -30px rgba(0,0,0,.95); }
+  .mm-anel { width:58px; height:58px; border-radius:50%; border:2px solid rgba(242,113,28,.5); display:flex; align-items:center; justify-content:center; margin-bottom:6px; animation:mmpulso 2.4s ease-in-out infinite; }
+  .mm-anel i { width:20px; height:20px; border-radius:50%; background:var(--rec); box-shadow:0 0 14px 3px rgba(255,77,94,.7); }
+  @keyframes mmpulso { 0%,100% { box-shadow:0 0 0 0 rgba(242,113,28,.35); } 50% { box-shadow:0 0 0 12px rgba(242,113,28,0); } }
+  .mm-centro small { font-size:11px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:var(--accent-text); }
+  .mm-centro h2 { margin:0; font-family:var(--disp); font-size:25px; font-weight:700; }
+  .mm-centro .prox { margin:4px 0 6px; font-size:13px; color:var(--muted); line-height:1.4; }
+  .mm-centro .prox b { color:var(--text); }
+  .mm-num { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:100%; margin-bottom:10px; }
+  .mm-num span { display:flex; flex-direction:column; padding:8px 4px; border-radius:12px; background:#19191B; border:1px solid #2E2E33; font-size:11px; color:var(--muted); }
+  .mm-num b { font-family:var(--disp); font-size:20px; color:var(--text); }
+  .mm-centro .btn { width:100%; }
+  
+  @media (max-width:1260px){
+    .mm-wrap { width:auto; left:0; transform:none; max-width:680px; margin:0 auto; }
+    .mm { display:flex; flex-direction:column; align-items:stretch; gap:0; min-height:0; }
+    .mm-centro { order:-1; margin-bottom:26px; }
+    .mm-col { gap:14px; padding-left:44px; margin-bottom:14px; }
+    .mm-ramo, .mm-ramo.esq { flex-direction:column; align-items:stretch; gap:10px; }
+    .mm-ramo.esq .n1 .ch, .mm-ramo .n1 .ch { order:2; transform:none; } .mm-ramo.aberto .n1 .ch { transform:rotate(90deg); }
+    .mm-no.n1 { min-width:0; }
+    .mm-folhas, .mm-ramo.esq .mm-folhas { align-items:stretch; padding-left:44px; --mmdx:-10px; }
+    .mm-no.n2 { max-width:none; justify-content:space-between; }
+    .mm-no.n2:hover, .mm-ramo.esq .mm-no.n2:hover { transform:none; }
+  }
+  @media (prefers-reduced-motion:reduce){ .mm-anel, .mm-f.on, .mm-ramo.aberto .mm-folhas > * { animation:none !important; } }
+
+  /* ===== Cortes ===== */
+  .card.corte::before { content:''; position:absolute; left:0; top:18px; bottom:18px; width:4px; border-radius:0 4px 4px 0; background:var(--amber); }
+  .card.corte.edicao::before { background:var(--accent); } .card.corte.pronto::before { background:#9A9AA2; } .card.corte.postado::before { background:var(--green); }
+  .badge.corte-st.afazer { background:var(--amber-soft); color:var(--amber); }
+  .badge.corte-st.edicao { background:var(--accent-soft); color:var(--accent-text); }
+  .badge.corte-st.pronto { background:var(--surface-2); color:var(--text); }
+  .badge.corte-st.postado { background:var(--green-soft); color:var(--green); }
+  a.chip { color:var(--text); text-decoration:none; } a.chip:hover { border-color:var(--accent); }
+  @media (max-width:980px){ header .tabs .tab { padding:0 11px; } }
 </style>
 </head>
 <body>
@@ -236,22 +315,27 @@
   <span id="sync" class="sync">Conectando…</span>
   <nav class="tabs" aria-label="Menu">
     <button class="tab" data-view="home"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg> Início</button>
-    <button class="tab" data-view="agenda"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg> Agenda</button>
-    <button class="tab" data-view="roteiro"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg> Roteiro</button>
+    <button class="tab" data-view="agenda"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg> Gravações</button>
+    <button class="tab" data-view="calendario"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg> Agenda</button>
+    <button class="tab" data-view="roteiro"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg> Roteiros</button>
+    <button class="tab" data-view="cortes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg> Cortes</button>
     <button class="tab" data-view="pessoas"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg> Pessoas</button>
   </nav>
 </header>
 <nav class="bnav" aria-label="Menu">
   <button class="tab" data-view="home"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
-  <button class="tab" data-view="agenda"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</button>
+  <button class="tab" data-view="agenda"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg>Gravações</button>
   <button class="rec" aria-label="Nova gravação" onclick="openGravacao()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
-  <button class="tab" data-view="roteiro"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Roteiro</button>
-  <button class="tab" data-view="pessoas"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg>Pessoas</button>
+  <button class="tab" data-view="roteiro"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Roteiros</button>
+  <button class="tab" data-view="cortes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg>Cortes</button>
 </nav>
 
 <main>
   <!-- ===== INÍCIO (menu) ===== -->
   <div id="view-home">
+    <div class="mm-wrap" id="mapa"></div>
+  </div>
+  <div id="view-calendario" style="display:none">
     <div class="home-wrap" id="home-cal"></div>
   </div>
 
@@ -292,7 +376,48 @@
     </div>
     <div id="lista-pessoas"></div>
   </div>
+  <!-- ===== CORTES (Instagram / Shorts) ===== -->
+  <div id="view-cortes" style="display:none">
+    <div class="stats" id="statsCortes"></div>
+    <div class="toolbar">
+      <button class="btn" onclick="openCorte()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Novo corte</button>
+      <input type="search" id="buscaCorte" placeholder="Buscar por título, mensagem ou pastor..." oninput="renderCortes()">
+      <select id="filtroCorte" onchange="renderCortes()">
+        <option value="">Todos os status</option><option value="afazer">A fazer</option><option value="edicao">Em edição</option><option value="pronto">Pronto</option><option value="postado">Postado</option>
+      </select>
+    </div>
+    <div id="lista-cortes"></div>
+  </div>
 </main>
+
+<!-- ===== MODAL CORTE ===== -->
+<div class="overlay" id="overlayCorte">
+  <div class="modal">
+    <h2 id="corteTitulo">Novo corte</h2>
+    <input type="hidden" id="coId">
+    <div class="field"><label>Título do corte</label><input type="text" id="coTitulo" placeholder="Ex.: O que significa paciência?"></div>
+    <div class="row">
+      <div class="field" style="flex:2"><label>Mensagem de origem</label><input type="text" id="coMensagem" placeholder="Ex.: Estudo de quarta — interpretação bíblica"></div>
+      <div class="field"><label>Pastor</label><input type="text" id="coPastor" placeholder="Ex.: Pr. Fulano"></div>
+    </div>
+    <div class="field"><label>Link do vídeo original</label><input type="url" id="coLink" placeholder="https://youtu.be/..."></div>
+    <div class="row">
+      <div class="field"><label>Início do trecho</label><input type="text" id="coInicio" placeholder="00:25:32"></div>
+      <div class="field"><label>Fim do trecho</label><input type="text" id="coFim" placeholder="00:26:28"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Onde postar</label><select id="coPlat"><option value="ambos">Instagram e Shorts</option><option value="instagram">Instagram</option><option value="shorts">Shorts do YouTube</option></select></div>
+      <div class="field"><label>Status</label><select id="coStatus"><option value="afazer">A fazer</option><option value="edicao">Em edição</option><option value="pronto">Pronto</option><option value="postado">Postado</option></select></div>
+    </div>
+    <div class="field"><label>Link do corte postado</label><input type="url" id="coPostado" placeholder="https://instagram.com/... ou https://youtube.com/shorts/..."></div>
+    <div class="field"><label>Observações</label><textarea id="coNotas" rows="2" placeholder="Legenda, hashtags, ideia de capa..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn danger" id="btnExcluirCorte" onclick="excluirCorte()" style="margin-right:auto; display:none">Excluir</button>
+      <button class="btn secondary" onclick="closeCorte()">Cancelar</button>
+      <button class="btn" onclick="salvarCorte()">Salvar corte</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== MODAL GRAVAÇÃO ===== -->
 <div class="overlay" id="overlay">
@@ -412,7 +537,7 @@ Exemplo:
 <script>
 const IC = {"cal": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/></svg>", "clap": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z\"/><path d=\"M4 11l1.5-6L20 8.5 19 11M8.5 5.5l2 5M13.5 6.8l2 4\"/></svg>", "pdf": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M12 12v6M9 15l3 3 3-3\"/></svg>", "words": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 6h16M4 12h16M4 18h10\"/></svg>", "phone": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2\"/></svg>", "check": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg>", "pen": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20h4L19 9l-4-4L4 16z\"/><path d=\"M13.5 6.5l4 4\"/></svg>", "doc": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M8 13h8M8 17h5\"/></svg>"};
 const ICB = {"left": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 5l-7 7 7 7\"/></svg>", "right": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 5l7 7-7 7\"/></svg>", "plus": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 5v14M5 12h14\"/></svg>", "pen": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20h4L19 9l-4-4L4 16z\"/><path d=\"M13.5 6.5l4 4\"/></svg>", "pdf": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M12 12v6M9 15l3 3 3-3\"/></svg>", "doc": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M8 13h8M8 17h5\"/></svg>"};
-let db = { gravacoes: [], pessoas: [] };
+let db = { gravacoes: [], pessoas: [], cortes: [] };
 let draftTopics = [];
 let accessCode = localStorage.getItem('cg-code') || '';
 
@@ -420,7 +545,8 @@ let accessCode = localStorage.getItem('cg-code') || '';
 function authHeaders(extra) { return Object.assign({ 'x-access-code': accessCode }, extra || {}); }
 function normalize(d) {
   return { gravacoes: Array.isArray(d && d.gravacoes) ? d.gravacoes : [],
-           pessoas:   Array.isArray(d && d.pessoas)   ? d.pessoas   : [] };
+           pessoas:   Array.isArray(d && d.pessoas)   ? d.pessoas   : [],
+           cortes:    Array.isArray(d && d.cortes)    ? d.cortes    : [] };
 }
 function setSync(state) {
   const el = document.getElementById('sync');
@@ -496,17 +622,19 @@ async function sincronizarBaixar() {
   }
   setSync('ok');
 }
-function renderTudo() { renderAgenda(); renderRoteiros(); renderPessoas(); }
+function renderTudo() { renderAgenda(); renderRoteiros(); renderPessoas(); renderCortes(); }
 function uid() { return Date.now().toString(36) + Math.floor(performance.now()).toString(36) + (db.gravacoes.length+db.pessoas.length); }
 
 /* ---------- Navegação ---------- */
 function navegar(v) {
-  ['home','agenda','roteiro','pessoas'].forEach(name => {
+  ['home','calendario','agenda','roteiro','pessoas','cortes'].forEach(name => {
     const el = document.getElementById('view-'+name);
     if (el) el.style.display = (name===v) ? '' : 'none';
   });
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.view===v));
   if (v==='home') renderHome();
+  if (v==='calendario') renderCal();
+  if (v==='cortes') renderCortes();
   if (v==='pessoas') renderPessoas();
   if (v==='roteiro') renderRoteiros();
   if (v==='agenda') renderAgenda();
@@ -861,15 +989,15 @@ function pessoaById(id){ return db.pessoas.find(p=>p.id===id); }
 /* ---------- Calendário da página inicial ---------- */
 let homeAno = null, homeMes = null;
 const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-function homeHoje(){ const d = new Date(); homeAno = d.getFullYear(); homeMes = d.getMonth(); renderHome(); }
+function homeHoje(){ const d = new Date(); homeAno = d.getFullYear(); homeMes = d.getMonth(); renderCal(); }
 function homeNav(delta){
   if (homeAno == null) homeHoje();
   homeMes += delta;
   if (homeMes < 0) { homeMes = 11; homeAno--; }
   if (homeMes > 11) { homeMes = 0; homeAno++; }
-  renderHome();
+  renderCal();
 }
-function renderHome(){
+function renderCal(){
   const el = document.getElementById('home-cal'); if (!el) return;
   if (homeAno == null) { const d = new Date(); homeAno = d.getFullYear(); homeMes = d.getMonth(); }
   const offset = new Date(homeAno, homeMes, 1).getDay();
@@ -947,6 +1075,190 @@ function renderAgenda() {
     </div>`;
   }).join('');
 }
+
+/* ---------- Cortes para Instagram e Shorts (mensagens dos pastores) ---------- */
+const CORTE_ST = { afazer:'A fazer', edicao:'Em edição', pronto:'Pronto', postado:'Postado' };
+const CORTE_PL = { ambos:'Instagram e Shorts', instagram:'Instagram', shorts:'Shorts do YouTube' };
+function openCorte(id){
+  const c = id ? (db.cortes||[]).find(x=>x.id===id) : null;
+  document.getElementById('corteTitulo').textContent = c ? 'Editar corte' : 'Novo corte';
+  const v = (k, val) => { document.getElementById(k).value = val || ''; };
+  v('coId', c&&c.id); v('coTitulo', c&&c.titulo); v('coMensagem', c&&c.mensagem); v('coPastor', c&&c.pastor); v('coLink', c&&c.link);
+  v('coInicio', c&&c.inicio); v('coFim', c&&c.fim); v('coPostado', c&&c.postado); v('coNotas', c&&c.notas);
+  document.getElementById('coPlat').value = (c&&c.plataforma) || 'ambos';
+  document.getElementById('coStatus').value = (c&&c.status) || 'afazer';
+  document.getElementById('btnExcluirCorte').style.display = c ? '' : 'none';
+  document.getElementById('overlayCorte').classList.add('open');
+  setTimeout(() => document.getElementById('coTitulo').focus(), 50);
+}
+function closeCorte(){ document.getElementById('overlayCorte').classList.remove('open'); }
+document.getElementById('overlayCorte').addEventListener('click', e => { if (e.target.id==='overlayCorte') closeCorte(); });
+function salvarCorte(){
+  const g = k => document.getElementById(k).value.trim();
+  const titulo = g('coTitulo');
+  if (!titulo) { alert('Dê um título para o corte.'); return; }
+  const obj = { titulo, mensagem:g('coMensagem'), pastor:g('coPastor'), link:g('coLink'), inicio:g('coInicio'), fim:g('coFim'),
+                plataforma:g('coPlat'), status:g('coStatus'), postado:g('coPostado'), notas:g('coNotas') };
+  if (!Array.isArray(db.cortes)) db.cortes = [];
+  const id = g('coId');
+  if (id) Object.assign(db.cortes.find(x=>x.id===id), obj);
+  else { obj.id = 'co' + uid(); obj.criado = new Date().toISOString().slice(0,10); db.cortes.push(obj); }
+  save(); closeCorte(); renderCortes(); if (document.getElementById('mapa')) renderMapa();
+}
+function excluirCorte(){
+  const id = document.getElementById('coId').value;
+  if (!confirm('Excluir este corte?')) return;
+  db.cortes = (db.cortes||[]).filter(x=>x.id!==id);
+  save(); closeCorte(); renderCortes(); renderMapa();
+}
+function irCortes(status){ navegar('cortes'); const f=document.getElementById('filtroCorte'); if (f) f.value = status||''; renderCortes(); }
+function renderCortes(){
+  const el = document.getElementById('lista-cortes'); if (!el) return;
+  const cs = db.cortes || [];
+  const cnt = k => cs.filter(x=>x.status===k).length;
+  const st = document.getElementById('statsCortes');
+  if (st) st.innerHTML = `
+    <div class="stat"><div class="num" style="color:var(--amber)">${cnt('afazer')}</div><div class="lbl">A fazer</div></div>
+    <div class="stat"><div class="num" style="color:var(--accent-text)">${cnt('edicao')}</div><div class="lbl">Em edição</div></div>
+    <div class="stat"><div class="num">${cnt('pronto')}</div><div class="lbl">Prontos</div></div>
+    <div class="stat"><div class="num" style="color:var(--green)">${cnt('postado')}</div><div class="lbl">Postados</div></div>`;
+  const busca = (document.getElementById('buscaCorte').value||'').toLowerCase();
+  const fs = document.getElementById('filtroCorte').value;
+  let list = cs.slice();
+  if (fs) list = list.filter(x=>x.status===fs);
+  if (busca) list = list.filter(x => ((x.titulo||'')+' '+(x.mensagem||'')+' '+(x.pastor||'')).toLowerCase().includes(busca));
+  const ordem = { afazer:0, edicao:1, pronto:2, postado:3 };
+  list.sort((a,b) => (ordem[a.status]??9)-(ordem[b.status]??9) || (b.criado||'').localeCompare(a.criado||''));
+  if (!cs.length) { el.innerHTML = '<div class="empty">Nenhum corte ainda.<br>Clique em <b>Novo corte</b> pra registrar um trecho de mensagem pra Instagram ou Shorts.</div>'; return; }
+  if (!list.length) { el.innerHTML = '<div class="empty">Nenhum corte encontrado.</div>'; return; }
+  el.innerHTML = list.map(c => {
+    const tr = (c.inicio||c.fim) ? `${esc(c.inicio||'?')} → ${esc(c.fim||'?')}` : '';
+    return `<div class="card corte ${esc(c.status||'afazer')}">
+      <div class="card-head">
+        <div style="flex:1; min-width:0">
+          <div class="title">${esc(c.titulo)}</div>
+          <div class="when">${[c.pastor, c.mensagem].filter(Boolean).map(esc).join(' · ') || 'Sem mensagem de origem'}</div>
+        </div>
+        <div class="card-actions">
+          <span class="badge corte-st ${esc(c.status||'afazer')}">${CORTE_ST[c.status]||'A fazer'}</span>
+          <button class="btn secondary small" onclick="openCorte('${c.id}')">${ICB.pen} Editar</button>
+        </div>
+      </div>
+      <div class="chips">
+        <span class="chip topic">${CORTE_PL[c.plataforma]||CORTE_PL.ambos}</span>
+        ${tr?`<span class="chip">Trecho ${tr}</span>`:''}
+        ${c.link?`<a class="chip" href="${esc(c.link)}" target="_blank" rel="noopener">Vídeo original ↗</a>`:''}
+        ${c.postado?`<a class="chip" href="${esc(c.postado)}" target="_blank" rel="noopener">Ver postado ↗</a>`:''}
+      </div>
+      ${c.notas?`<div class="roteiro-preview" style="max-height:none">${esc(c.notas)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ---------- Início: mapa mental interativo ---------- */
+const MM_IC = {
+  gravacoes: '<rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/>',
+  agenda: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 13h2M12 13h2M16 13h2M8 17h2M12 17h2"/>',
+  roteiros: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+  cortes: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/>',
+  mais: '<path d="M12 5v14M5 12h14"/>',
+  seta: '<path d="M9 6l6 6-6 6"/>'
+};
+function mmIco(k, c){ return `<svg class="${c||'mm-ic'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${MM_IC[k]}</svg>`; }
+let mmAbertos = null;
+function mmCelular(){ return window.innerWidth <= 1260; }
+function irAgenda(status){ navegar('agenda'); const f=document.getElementById('filtroStatus'); if (f){ f.value=status||''; } renderAgenda(); }
+function toggleRamo(id){ if (mmAbertos.has(id)) mmAbertos.delete(id); else mmAbertos.add(id); renderMapa(); }
+function renderHome(){ renderMapa(); renderCal(); }
+function renderMapa(){
+  const el = document.getElementById('mapa'); if (!el) return;
+  if (!mmAbertos) mmAbertos = new Set(mmCelular() ? [] : ['gravacoes','agenda','roteiros','cortes']);
+  const g = db.gravacoes, hoje = new Date().toISOString().slice(0,10);
+  const ag = g.filter(x=>x.status==='agendada').length, gr = g.filter(x=>x.status==='gravada').length, ca = g.filter(x=>x.status==='cancelada').length;
+  const futuras = g.filter(x=>x.status==='agendada' && x.data && x.data>=hoje).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')));
+  const prox = futuras[0];
+  const comRot = g.filter(x=>x.roteiro && x.roteiro.trim()).length;
+  const aEscrever = g.filter(x=>!(x.roteiro && x.roteiro.trim()) && x.status!=='cancelada').length;
+  const feitas = g.filter(x=>x.feita).length, np = db.pessoas.length;
+  const ddmm = d => d ? d.split('-').reverse().slice(0,2).join('/') : '';
+  const agora = new Date();
+  const cs = db.cortes || [], ccnt = k => cs.filter(x=>x.status===k).length;
+  const ramos = [
+    { id:'gravacoes', t:'Gravações', sub:`${ag} agendada(s)`, lado:'esq', folhas:[
+      { t:'Próximas gravações', n:futuras.length, act:"irAgenda('agendada')" },
+      { t:'Gravadas', n:gr, act:"irAgenda('gravada')" },
+      { t:'Canceladas', n:ca, act:"irAgenda('cancelada')" },
+      { t:'Pessoas da equipe', n:np, act:"navegar('pessoas')" },
+      { t:'Nova gravação', mais:true, act:'openGravacao()' } ] },
+    { id:'agenda', t:'Agenda', sub:`${MESES_PT[agora.getMonth()]} ${agora.getFullYear()}`, lado:'esq', folhas:[
+      { t:'Ver o mês', act:"navegar('calendario')" },
+      { t: prox ? `Próxima · ${ddmm(prox.data)}` : 'Nenhuma gravação marcada', n: prox ? (prox.titulo||'') : '', act: prox ? `openGravacao('${prox.id}')` : 'openGravacao()' },
+      { t:'Agendar gravação', mais:true, act:'openGravacao()' } ] },
+    { id:'roteiros', t:'Roteiros', sub:`${comRot} de ${g.length} pronto(s)`, lado:'dir', folhas:[
+      { t:'A escrever', n:aEscrever, act:"navegar('roteiro')" },
+      { t:'Roteiros prontos', n:comRot, act:"navegar('roteiro')" },
+      { t:'Gravadas com sucesso', n:feitas, act:"navegar('roteiro')" },
+      { t:'Novo roteiro', mais:true, act:'novoRoteiro()' } ] },
+    { id:'cortes', t:'Cortes', sub:'Instagram e Shorts', lado:'dir', folhas:[
+      { t:'A fazer', n:ccnt('afazer'), act:"irCortes('afazer')" },
+      { t:'Em edição', n:ccnt('edicao'), act:"irCortes('edicao')" },
+      { t:'Postados', n:ccnt('postado'), act:"irCortes('postado')" },
+      { t:'Novo corte', mais:true, act:'openCorte()' } ] }
+  ];
+  const folha = f => `<button class="mm-no n2${f.mais?' mais':''}" data-folha onclick="${f.act}">${f.mais?mmIco('mais','mm-ic s'):''}<span class="t">${esc(f.t)}</span>${(f.n!==undefined && f.n!=='')?`<span class="n">${esc(String(f.n))}</span>`:''}</button>`;
+  const ramo = r => `<div class="mm-ramo ${r.lado}${mmAbertos.has(r.id)?' aberto':''}" data-ramo="${r.id}">
+      <button class="mm-no n1" data-n1 aria-expanded="${mmAbertos.has(r.id)}" onclick="toggleRamo('${r.id}')">
+        <span class="pl">${mmIco(r.id)}</span><span class="tx"><b>${r.t}</b><small>${esc(r.sub)}</small></span>${mmIco('seta','mm-ic ch')}
+      </button>
+      <div class="mm-folhas">${r.folhas.map(folha).join('')}</div>
+    </div>`;
+  el.innerHTML = `<div class="mm" id="mm">
+      <svg class="mm-linhas" id="mmLinhas" aria-hidden="true"></svg>
+      <div class="mm-col esq">${ramos.filter(r=>r.lado==='esq').map(ramo).join('')}</div>
+      <div class="mm-centro" id="mmCentro">
+        <div class="mm-anel"><i></i></div>
+        <small>PIB News</small><h2>Gravações PIBN</h2>
+        <p class="prox">${prox ? `Próxima: <b>${ddmm(prox.data)}${prox.hora?' · '+esc(prox.hora):''}</b><br>${esc(prox.titulo||'')}` : 'Nenhuma gravação marcada'}</p>
+        <div class="mm-num"><span><b>${ag}</b>agendadas</span><span><b>${gr}</b>gravadas</span><span><b>${np}</b>pessoas</span></div>
+        <button class="btn" onclick="openGravacao()">${mmIco('mais','ico')} Nova gravação</button>
+      </div>
+      <div class="mm-col dir">${ramos.filter(r=>r.lado==='dir').map(ramo).join('')}</div>
+    </div>`;
+  el.querySelectorAll('.mm-ramo').forEach(r => {
+    r.addEventListener('mouseenter', () => document.querySelectorAll(`#mmLinhas [data-r="${r.dataset.ramo}"]`).forEach(x=>x.classList.add('on')));
+    r.addEventListener('mouseleave', () => document.querySelectorAll(`#mmLinhas [data-r]`).forEach(x=>x.classList.remove('on')));
+  });
+  if (!window._mmObs && window.ResizeObserver){ window._mmObs = new ResizeObserver(()=>desenharMapa()); }
+  if (window._mmObs){ window._mmObs.disconnect(); window._mmObs.observe(el.querySelector('#mm')); el.querySelectorAll('.mm-folhas').forEach(f=>window._mmObs.observe(f)); }
+  requestAnimationFrame(desenharMapa);
+}
+function desenharMapa(){
+  const mm = document.getElementById('mm'), svg = document.getElementById('mmLinhas'), c = document.getElementById('mmCentro');
+  if (!mm || !svg || !c || !mm.offsetParent) return;
+  const B = mm.getBoundingClientRect();
+  svg.setAttribute('width', B.width); svg.setAttribute('height', B.height); svg.setAttribute('viewBox', `0 0 ${B.width} ${B.height}`);
+  const R = e => { const r = e.getBoundingClientRect(); return { l:r.left-B.left, r:r.right-B.left, t:r.top-B.top, b:r.bottom-B.top, cx:(r.left+r.right)/2-B.left, cy:(r.top+r.bottom)/2-B.top }; };
+  const C = R(c); let out = '';
+  const curva = (x1,y1,x2,y2) => { const k=(x2-x1)*0.5; return `M${x1.toFixed(1)} ${y1.toFixed(1)}C${(x1+k).toFixed(1)} ${y1.toFixed(1)} ${(x2-k).toFixed(1)} ${y2.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`; };
+  const cotovelo = (x,y1,x2,y2) => `M${x.toFixed(1)} ${y1.toFixed(1)}V${(y2-10).toFixed(1)}Q${x.toFixed(1)} ${y2.toFixed(1)} ${(x+10).toFixed(1)} ${y2.toFixed(1)}H${x2.toFixed(1)}`;
+  const linha = (d, rid, n) => `<path class="mm-l n${n}" data-r="${rid}" d="${d}"/><path class="mm-f n${n}" data-r="${rid}" d="${d}"/>`;
+  const cel = mmCelular();
+  mm.querySelectorAll('.mm-ramo').forEach(r => {
+    const rid = r.dataset.ramo, n1 = R(r.querySelector('[data-n1]'));
+    if (cel) out += linha(cotovelo(C.l+22, C.b, n1.l, n1.cy), rid, 1);
+    else if (r.classList.contains('esq')) out += linha(curva(C.l, C.cy, n1.r, n1.cy), rid, 1);
+    else out += linha(curva(C.r, C.cy, n1.l, n1.cy), rid, 1);
+    if (!r.classList.contains('aberto')) return;
+    r.querySelectorAll('[data-folha]').forEach(f => {
+      const L = R(f);
+      if (cel) out += linha(cotovelo(n1.l+22, n1.b, L.l, L.cy), rid, 2);
+      else if (r.classList.contains('esq')) out += linha(curva(n1.l, n1.cy, L.r, L.cy), rid, 2);
+      else out += linha(curva(n1.r, n1.cy, L.l, L.cy), rid, 2);
+    });
+  });
+  svg.innerHTML = out;
+}
+window.addEventListener('resize', () => { clearTimeout(window._mmT); window._mmT = setTimeout(desenharMapa, 80); });
 
 /* ---------- Backup ---------- */
 function exportData() {
