@@ -305,14 +305,30 @@
   .badge.corte-st.edicao { background:var(--accent-soft); color:var(--accent-text); }
   .badge.corte-st.pronto { background:var(--surface-2); color:var(--text); }
   .badge.corte-st.postado { background:var(--green-soft); color:var(--green); }
-  #statsCortes { grid-template-columns: repeat(5, minmax(0,1fr)); }
+  .culto-novo { margin-bottom:18px; }
+  .culto-form { display:flex; gap:10px; margin-top:14px; }
+  .culto-form input { flex:1; min-width:0; }
+  .card.culto { margin-bottom:18px; }
+  .culto-sec { margin-top:20px; }
+  .culto-sec h3 { font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-text); margin:0 0 10px; font-weight:700; }
+  .culto-video { position:relative; width:100%; max-width:720px; aspect-ratio:16/9; border-radius:14px; overflow:hidden; border:1px solid var(--border); background:#000; }
+  .culto-video iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .culto-desc { width:100%; min-height:220px; resize:vertical; font:inherit; font-size:14px; line-height:1.5; }
+  .culto-acoes { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center; }
+  .cortes-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px; }
+  .corte-item { background:var(--surface-2); border:1px solid var(--border); border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .corte-item .corte-video { width:100%; }
+  .corte-item .t { font-weight:700; line-height:1.25; }
+  .corte-item .leg { font-size:13px; color:var(--muted); white-space:pre-line; }
+  .culto-espera { margin-top:14px; color:var(--muted); }
+  @media (max-width:640px){ .culto-form { flex-direction:column; } .cortes-grid { grid-template-columns:1fr; } .corte-item .corte-video { max-width:300px; margin:0 auto; } }
   .badge.corte-st.aprovar { background:rgba(187,208,237,.22); color:#fff; box-shadow:0 0 0 1px rgba(187,208,237,.45) inset; }
   .card.corte.aprovar::before { background:var(--accent-2); }
   .corte-corpo { display:flex; gap:18px; align-items:flex-start; margin-top:12px; }
   .corte-corpo .corte-info { flex:1; min-width:0; }
   .corte-video { width:200px; aspect-ratio:9/16; flex:none; border-radius:14px; background:#000; border:1px solid var(--border); object-fit:contain; display:block; }
   .corte-aprova { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
-  .corte-aprova .btn.ok { background:var(--green); color:#062414; }
+  .btn.ok { background:var(--green); color:#062414; }
   .corte-baixar { font-size:13px; }
   @media (max-width:640px){
     .corte-corpo { flex-direction:column; align-items:stretch; }
@@ -415,13 +431,13 @@
   </div>
   <!-- ===== CORTES (Instagram / Shorts) ===== -->
   <div id="view-cortes" style="display:none">
-    <div class="stats" id="statsCortes"></div>
-    <div class="toolbar">
-      <button class="btn" onclick="openCorte()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Novo corte</button>
-      <input type="search" id="buscaCorte" placeholder="Buscar por título, mensagem ou pastor..." oninput="renderCortes()">
-      <select id="filtroCorte" onchange="renderCortes()">
-        <option value="">Todos os status</option><option value="aprovar">Pra aprovar</option><option value="afazer">A fazer</option><option value="edicao">Em edição</option><option value="pronto">Pronto</option><option value="postado">Postado</option>
-      </select>
+    <div class="card culto-novo">
+      <div class="title">Cortes das mensagens</div>
+      <div class="when">Cole o link do YouTube do culto. Aqui aparecem a mensagem na íntegra, a descrição pro YouTube e os cortes pra Instagram e Shorts.</div>
+      <div class="culto-form">
+        <input type="url" id="cultoLink" placeholder="https://www.youtube.com/watch?v=..." onkeydown="if(event.key==='Enter')enviarCulto()">
+        <button class="btn" onclick="enviarCulto()">Enviar</button>
+      </div>
     </div>
     <div id="lista-cortes"></div>
   </div>
@@ -575,7 +591,7 @@ Exemplo:
 <script>
 const IC = {"cal": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/></svg>", "clap": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z\"/><path d=\"M4 11l1.5-6L20 8.5 19 11M8.5 5.5l2 5M13.5 6.8l2 4\"/></svg>", "pdf": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M12 12v6M9 15l3 3 3-3\"/></svg>", "words": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 6h16M4 12h16M4 18h10\"/></svg>", "phone": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2\"/></svg>", "check": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg>", "pen": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20h4L19 9l-4-4L4 16z\"/><path d=\"M13.5 6.5l4 4\"/></svg>", "doc": "<svg class=\"ico-s\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M8 13h8M8 17h5\"/></svg>"};
 const ICB = {"left": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 5l-7 7 7 7\"/></svg>", "right": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 5l7 7-7 7\"/></svg>", "plus": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 5v14M5 12h14\"/></svg>", "pen": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20h4L19 9l-4-4L4 16z\"/><path d=\"M13.5 6.5l4 4\"/></svg>", "pdf": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M12 12v6M9 15l3 3 3-3\"/></svg>", "doc": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"/><path d=\"M14 3v6h6M8 13h8M8 17h5\"/></svg>"};
-let db = { gravacoes: [], pessoas: [], cortes: [] };
+let db = { gravacoes: [], pessoas: [], cortes: [], cultos: [] };
 let draftTopics = [];
 let accessCode = localStorage.getItem('cg-code') || '';
 
@@ -584,7 +600,8 @@ function authHeaders(extra) { return Object.assign({ 'x-access-code': accessCode
 function normalize(d) {
   return { gravacoes: Array.isArray(d && d.gravacoes) ? d.gravacoes : [],
            pessoas:   Array.isArray(d && d.pessoas)   ? d.pessoas   : [],
-           cortes:    Array.isArray(d && d.cortes)    ? d.cortes    : [] };
+           cortes:    Array.isArray(d && d.cortes)    ? d.cortes    : [],
+           cultos:    Array.isArray(d && d.cultos)    ? d.cultos    : [] };
 }
 function setSync(state) {
   const el = document.getElementById('sync');
@@ -1163,59 +1180,90 @@ function ajusteCorte(id){
   c.notas = ((c.notas ? c.notas + String.fromCharCode(10) : '') +`Ajuste pedido (${d}): ${o.trim() || 'sem detalhe'}`);
   save(); renderCortes(); renderMapa();
 }
-function irCortes(status){ navegar('cortes'); const f=document.getElementById('filtroCorte'); if (f) f.value = status||''; renderCortes(); }
+function irCortes(focar){ navegar('cortes'); if (focar) setTimeout(() => { const i = document.getElementById('cultoLink'); if (i) i.focus(); }, 60); }
+function ytId(u){ const m = String(u||'').match(/(?:v=|youtu\.be\/|shorts\/|live\/|embed\/)([\w-]{11})/); return m ? m[1] : ''; }
+function hms2s(t){ if (!t) return 0; return String(t).split(':').reduce((a, x) => a*60 + (+x||0), 0); }
+function enviarCulto(){
+  const inp = document.getElementById('cultoLink');
+  const link = inp.value.trim(), id = ytId(link);
+  if (!id) { alert('Esse link não parece ser do YouTube. Cole o link do vídeo do culto.'); return; }
+  if (!Array.isArray(db.cultos)) db.cultos = [];
+  if (db.cultos.some(c => c.yt === id)) { alert('Esse culto já foi enviado.'); return; }
+  db.cultos.push({ id:'cu' + uid(), link, yt:id, status:'aguardando', criado:new Date().toISOString().slice(0,10) });
+  inp.value = '';
+  save(); renderCortes();
+}
+function removerCulto(id){
+  if (!confirm('Remover esse culto da lista?')) return;
+  db.cultos = (db.cultos||[]).filter(c => c.id !== id);
+  save(); renderCortes();
+}
+function copiarDesc(id){
+  const t = document.getElementById('desc-' + id); if (!t) return;
+  const ok = () => { const b = document.getElementById('copiar-' + id); if (b) { b.textContent = 'Copiado ✓'; setTimeout(() => b.textContent = 'Copiar descrição', 1800); } };
+  if (navigator.clipboard) navigator.clipboard.writeText(t.value).then(ok, () => { t.select(); document.execCommand('copy'); ok(); });
+  else { t.select(); document.execCommand('copy'); ok(); }
+}
+function postadoCorte(id){
+  const c = (db.cortes||[]).find(x=>x.id===id); if (!c) return;
+  c.status = 'postado'; save(); renderCortes();
+}
+function corteHTML(c){
+  const st = c.status || 'aprovar';
+  let acoes = '';
+  if (st === 'aprovar') acoes = `<button class="btn ok small" onclick="aprovarCorte('${c.id}')">✓ Aprovar</button><button class="btn secondary small" onclick="ajusteCorte('${c.id}')">Pedir ajuste</button>`;
+  else if (st === 'pronto') acoes = `<button class="btn secondary small" onclick="postadoCorte('${c.id}')">Marcar como postado</button>`;
+  return `<div class="corte-item">
+    ${c.video?`<video class="corte-video" src="${esc(c.video)}" controls playsinline preload="metadata"></video>`:''}
+    <div class="t">${esc(c.titulo)}</div>
+    <div class="chips"><span class="badge corte-st ${esc(st)}">${CORTE_ST[st]||st}</span>${(c.inicio||c.fim)?`<span class="chip">${esc(c.inicio||'?')} → ${esc(c.fim||'?')}</span>`:''}</div>
+    ${c.notas?`<div class="leg">${esc(c.notas)}</div>`:''}
+    <div class="culto-acoes">${acoes}${c.video?`<a class="chip corte-baixar" href="${esc(c.video)}" download>Baixar ↓</a>`:''}</div>
+  </div>`;
+}
 function renderCortes(){
   const el = document.getElementById('lista-cortes'); if (!el) return;
-  const cs = db.cortes || [];
-  const cnt = k => cs.filter(x=>x.status===k).length;
-  const st = document.getElementById('statsCortes');
-  if (st) st.innerHTML = `
-    <div class="stat"><div class="num" style="color:#fff">${cnt('aprovar')}</div><div class="lbl">Pra aprovar</div></div>
-    <div class="stat"><div class="num" style="color:var(--amber)">${cnt('afazer')}</div><div class="lbl">A fazer</div></div>
-    <div class="stat"><div class="num" style="color:var(--accent-text)">${cnt('edicao')}</div><div class="lbl">Em edição</div></div>
-    <div class="stat"><div class="num">${cnt('pronto')}</div><div class="lbl">Aprovados</div></div>
-    <div class="stat"><div class="num" style="color:var(--green)">${cnt('postado')}</div><div class="lbl">Postados</div></div>`;
-  const busca = (document.getElementById('buscaCorte').value||'').toLowerCase();
-  const fs = document.getElementById('filtroCorte').value;
-  let list = cs.slice();
-  if (fs) list = list.filter(x=>x.status===fs);
-  if (busca) list = list.filter(x => ((x.titulo||'')+' '+(x.mensagem||'')+' '+(x.pastor||'')).toLowerCase().includes(busca));
-  const ordem = { aprovar:0, afazer:1, edicao:2, pronto:3, postado:4 };
-  list.sort((a,b) => (ordem[a.status]??9)-(ordem[b.status]??9) || (b.criado||'').localeCompare(a.criado||'') || (a.ordem||0)-(b.ordem||0));
-  if (!cs.length) { el.innerHTML = '<div class="empty">Nenhum corte ainda.<br>Clique em <b>Novo corte</b> pra registrar um trecho de mensagem pra Instagram ou Shorts.</div>'; return; }
-  if (!list.length) { el.innerHTML = '<div class="empty">Nenhum corte encontrado.</div>'; return; }
-  el.innerHTML = list.map(c => {
-    const tr = (c.inicio||c.fim) ? `${esc(c.inicio||'?')} → ${esc(c.fim||'?')}` : '';
-    return `<div class="card corte ${esc(c.status||'afazer')}">
+  const cultos = (db.cultos||[]).slice().sort((a,b) => (b.data||b.criado||'').localeCompare(a.data||a.criado||''));
+  const cortes = db.cortes || [];
+  const ordemCorte = (a,b) => (a.ordem||0)-(b.ordem||0);
+  let html = cultos.map(cu => {
+    const cs = cortes.filter(c => c.culto === cu.id).sort(ordemCorte);
+    const pronto = cu.status === 'pronto';
+    const quando = [cu.pastor, cu.data ? cu.data.split('-').reverse().join('/') : ''].filter(Boolean).map(esc).join(' · ');
+    const ini = hms2s(cu.inicio), fim = hms2s(cu.fim);
+    const emb = `https://www.youtube-nocookie.com/embed/${esc(cu.yt)}?rel=0${ini?`&start=${ini}`:''}${fim?`&end=${fim}`:''}`;
+    const abrir = `https://youtu.be/${esc(cu.yt)}${ini?`?t=${ini}`:''}`;
+    return `<div class="card culto">
       <div class="card-head">
         <div style="flex:1; min-width:0">
-          <div class="title">${esc(c.titulo)}</div>
-          <div class="when">${[c.pastor, c.mensagem].filter(Boolean).map(esc).join(' · ') || 'Sem mensagem de origem'}</div>
+          <div class="title">${esc(cu.titulo || 'Culto enviado')}</div>
+          <div class="when">${quando || 'Enviado em ' + esc((cu.criado||'').split('-').reverse().join('/'))}</div>
         </div>
         <div class="card-actions">
-          <span class="badge corte-st ${esc(c.status||'afazer')}">${CORTE_ST[c.status]||'A fazer'}</span>
-          <button class="btn secondary small" onclick="openCorte('${c.id}')">${ICB.pen} Editar</button>
+          <span class="badge corte-st ${pronto?'pronto':'afazer'}">${pronto?'Cortes prontos':'Aguardando cortes'}</span>
+          <button class="btn secondary small" onclick="removerCulto('${cu.id}')">Remover</button>
         </div>
       </div>
-      <div class="corte-corpo">
-        ${c.video?`<video class="corte-video" src="${esc(c.video)}" controls playsinline preload="metadata"></video>`:''}
-        <div class="corte-info">
-          <div class="chips">
-            <span class="chip topic">${CORTE_PL[c.plataforma]||CORTE_PL.ambos}</span>
-            ${tr?`<span class="chip">Trecho ${tr}</span>`:''}
-            ${c.link?`<a class="chip" href="${esc(c.link)}" target="_blank" rel="noopener">Vídeo original ↗</a>`:''}
-            ${c.video?`<a class="chip corte-baixar" href="${esc(c.video)}" download>Baixar vídeo ↓</a>`:''}
-            ${c.postado?`<a class="chip" href="${esc(c.postado)}" target="_blank" rel="noopener">Ver postado ↗</a>`:''}
-          </div>
-          ${c.notas?`<div class="roteiro-preview" style="max-height:none; white-space:pre-line">${esc(c.notas)}</div>`:''}
-          ${c.status==='aprovar'?`<div class="corte-aprova">
-            <button class="btn ok small" onclick="aprovarCorte('${c.id}')">✓ Aprovar</button>
-            <button class="btn secondary small" onclick="ajusteCorte('${c.id}')">Pedir ajuste</button>
-          </div>`:''}
-        </div>
+      ${!pronto ? `<div class="culto-espera">Link recebido. A mensagem na íntegra, a descrição e os cortes aparecem aqui assim que ficarem prontos. <a class="chip" href="${esc(cu.link)}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>` : `
+      <div class="culto-sec">
+        <h3>Mensagem na íntegra${cu.inicio?` · ${esc(cu.inicio)} → ${esc(cu.fim||'')}`:''}</h3>
+        <div class="culto-video"><iframe src="${emb}" title="Mensagem na íntegra" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+        <div class="culto-acoes"><a class="chip" href="${abrir}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>
       </div>
+      ${cu.descricao?`<div class="culto-sec">
+        <h3>Descrição pro YouTube</h3>
+        <textarea class="culto-desc" id="desc-${cu.id}" readonly>${esc(cu.descricao)}</textarea>
+        <div class="culto-acoes"><button class="btn small" id="copiar-${cu.id}" onclick="copiarDesc('${cu.id}')">Copiar descrição</button></div>
+      </div>`:''}
+      <div class="culto-sec">
+        <h3>Cortes pra Instagram e Shorts${cs.length?` · ${cs.length}`:''}</h3>
+        ${cs.length ? `<div class="cortes-grid">${cs.map(corteHTML).join('')}</div>` : '<div class="culto-espera">Nenhum corte ainda.</div>'}
+      </div>`}
     </div>`;
   }).join('');
+  const soltos = cortes.filter(c => !c.culto || !cultos.some(cu => cu.id === c.culto)).sort(ordemCorte);
+  if (soltos.length) html += `<div class="card culto"><div class="title">Outros cortes</div><div class="culto-sec"><div class="cortes-grid">${soltos.map(corteHTML).join('')}</div></div></div>`;
+  el.innerHTML = html || '<div class="empty">Nenhum culto ainda.<br>Cole o link do YouTube acima pra começar.</div>';
 }
 
 /* ---------- Início: mapa mental interativo ---------- */
@@ -1263,11 +1311,9 @@ function renderMapa(){
       { t:'Gravadas com sucesso', act:"navegar('roteiro')" },
       { t:'Novo roteiro', mais:true, act:'novoRoteiro()' } ] },
     { id:'cortes', t:'Cortes', sub:'Instagram e Shorts', lado:'dir', folhas:[
-      { t:'Pra aprovar', act:"irCortes('aprovar')" },
-      { t:'A fazer', act:"irCortes('afazer')" },
-      { t:'Em edição', act:"irCortes('edicao')" },
-      { t:'Postados', act:"irCortes('postado')" },
-      { t:'Novo corte', mais:true, act:'openCorte()' } ] }
+      { t:'Cortes pra aprovar', act:"irCortes()" },
+      { t:'Mensagens na íntegra', act:"irCortes()" },
+      { t:'Enviar link do culto', mais:true, act:"irCortes(true)" } ] }
   ];
   const folha = f => `<button class="mm-no n2${f.mais?' mais':''}" data-folha onclick="${f.act}">${f.mais?mmIco('mais','mm-ic s'):''}<span class="t">${esc(f.t)}</span>${(f.n!==undefined && f.n!=='')?`<span class="n">${esc(String(f.n))}</span>`:''}</button>`;
   const ramo = r => `<div class="mm-ramo ${r.lado}${mmAbertos.has(r.id)?' aberto':''}" data-ramo="${r.id}">

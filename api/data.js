@@ -1,7 +1,7 @@
 // Função serverless do Vercel: lê e grava os dados compartilhados no Vercel KV (Upstash Redis).
 // Endpoints:
-//   GET  /api/data  -> retorna { gravacoes, pessoas, cortes }
-//   POST /api/data  -> salva  { gravacoes, pessoas, cortes }
+//   GET  /api/data  -> retorna { gravacoes, pessoas, cortes, cultos }
+//   POST /api/data  -> salva  { gravacoes, pessoas, cortes, cultos }
 // Segurança: se a variável de ambiente ACCESS_CODE estiver definida, exige o header x-access-code.
 
 const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -42,16 +42,20 @@ module.exports = async (req, res) => {
       if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = null; } }
       if (!body || typeof body !== 'object') { res.status(400).json({ error: 'body_invalido' }); return; }
       // cortes (Instagram/Shorts): se quem salvou não mandou (versão antiga do app), mantém os que já estavam guardados
+      // cultos (link do YouTube -> mensagem, descrição e cortes): mesma regra
       let cortes = Array.isArray(body.cortes) ? body.cortes : null;
-      if (!cortes) {
+      let cultos = Array.isArray(body.cultos) ? body.cultos : null;
+      if (!cortes || !cultos) {
         const atual = await kv(['GET', DATA_KEY]);
         const d = atual && atual.result ? JSON.parse(atual.result) : {};
-        cortes = Array.isArray(d.cortes) ? d.cortes : [];
+        if (!cortes) cortes = Array.isArray(d.cortes) ? d.cortes : [];
+        if (!cultos) cultos = Array.isArray(d.cultos) ? d.cultos : [];
       }
       const safe = {
         gravacoes: Array.isArray(body.gravacoes) ? body.gravacoes : [],
         pessoas: Array.isArray(body.pessoas) ? body.pessoas : [],
-        cortes
+        cortes,
+        cultos
       };
       await kv(['SET', DATA_KEY, JSON.stringify(safe)]);
       res.status(200).json({ ok: true });
