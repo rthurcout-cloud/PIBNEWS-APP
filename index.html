@@ -330,6 +330,10 @@
   .culto-tile-txt .t { font-weight:700; line-height:1.3; }
   .culto-tile-txt .p { font-size:13px; color:var(--muted); margin-top:4px; }
   .culto-voltar { margin-bottom:14px; }
+  .badge.corte-st.erro { background:rgba(240,113,103,.16); color:#FF8F86; }
+  .culto-rodando::before { animation:rodando 1.2s ease-in-out infinite; }
+  @keyframes rodando { 50% { opacity:.2; } }
+  .culto-espera a:not(.chip) { color:var(--accent-text); }
   @media (hover:hover) and (pointer:fine){ .culto-tile:hover { transform:scale(1.03); border-color:var(--accent-2); box-shadow:0 14px 30px -14px rgba(0,0,0,.6); } }
   .culto-tile:active { transform:scale(.97); border-color:var(--accent-2); }
   @media (max-width:640px){ .cultos-grid { grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; } .culto-tile-txt { padding:10px; } .culto-tile-txt .t { font-size:14px; } }
@@ -445,7 +449,8 @@
   <div id="view-cortes" style="display:none">
     <div class="card culto-novo">
       <div class="title">Cortes das mensagens</div>
-      <div class="when">Cole o link do YouTube do culto. Aqui aparecem a mensagem na íntegra, a descrição pro YouTube e os cortes pra Instagram e Shorts.</div>
+      <div class="when">Suba o vídeo do culto na pasta <b>CORTES</b> do Drive. Em até 15 minutos o robô começa e, em cerca de 1 hora, aparecem aqui a mensagem na íntegra, a descrição pro YouTube e os cortes pra Instagram e Shorts. O link do YouTube abaixo é opcional (serve pra ligar o culto ao vídeo do YouTube).</div>
+      <div class="culto-acoes"><a class="btn small" href="https://drive.google.com/drive/folders/1rEWdoYDcdlfo19mXGauTbNQkUDGNEcAc" target="_blank" rel="noopener">Abrir pasta do Drive ↗</a></div>
       <div class="culto-form">
         <input type="url" id="cultoLink" placeholder="https://www.youtube.com/watch?v=..." onkeydown="if(event.key==='Enter')enviarCulto()">
         <button class="btn" onclick="enviarCulto()">Enviar</button>
@@ -1230,22 +1235,32 @@ function corteHTML(c){
     <div class="t">${esc(c.titulo)}</div>
     <div class="chips"><span class="badge corte-st ${esc(st)}">${CORTE_ST[st]||st}</span>${(c.inicio||c.fim)?`<span class="chip">${esc(c.inicio||'?')} → ${esc(c.fim||'?')}</span>`:''}</div>
     ${c.notas?`<div class="leg">${esc(c.notas)}</div>`:''}
-    <div class="culto-acoes">${acoes}${c.video?`<a class="chip corte-baixar" href="${esc(c.video)}" download>Baixar ↓</a>`:''}</div>
+    <div class="culto-acoes">${acoes}${c.video?`<a class="chip corte-baixar" href="${esc(c.videoHD || c.video)}" download>Baixar${c.videoHD?' em Full HD':''} ↓</a>`:''}</div>
   </div>`;
 }
 let cultoAberto = null;
 function abrirCulto(id){ cultoAberto = id; renderCortes(); window.scrollTo({ top:0, behavior:'smooth' }); }
 function fecharCulto(){ cultoAberto = null; renderCortes(); window.scrollTo({ top:0, behavior:'smooth' }); }
+function seloCulto(cu, pend){
+  if (cu.status === 'producao') return '<span class="badge corte-st edicao culto-rodando">Em produção</span>';
+  if (cu.status === 'erro') return '<span class="badge corte-st erro">Deu erro</span>';
+  if (cu.status !== 'pronto') return '<span class="badge corte-st afazer">Aguardando vídeo</span>';
+  return pend ? '<span class="badge corte-st aprovar">Pra aprovar</span>' : '<span class="badge corte-st pronto">Cortes prontos</span>';
+}
+function tentarDeNovo(id){
+  const c = (db.cultos||[]).find(x => x.id === id); if (!c) return;
+  delete c.driveId; delete c.driveNome; c.status = 'aguardando'; c.erro = '';
+  save(); renderCortes();
+}
 function cultoTile(cu){
   const cs = (db.cortes||[]).filter(c => c.culto === cu.id);
   const pronto = cu.status === 'pronto';
   const pend = cs.some(c => (c.status||'aprovar') === 'aprovar');
   const data = cu.data ? cu.data.split('-').reverse().join('/') : '';
-  const selo = !pronto ? '<span class="badge corte-st afazer">Aguardando cortes</span>'
-             : pend ? '<span class="badge corte-st aprovar">Pra aprovar</span>' : '<span class="badge corte-st pronto">Cortes prontos</span>';
+  const selo = seloCulto(cu, pend);
   return `<button class="culto-tile" onclick="abrirCulto('${cu.id}')">
-    <div class="culto-capa"><img src="https://i.ytimg.com/vi/${esc(cu.yt)}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">${selo}</div>
-    <div class="culto-tile-txt"><div class="t">${esc(cu.titulo || 'Culto enviado')}</div><div class="p">${[cu.pastor, data].filter(Boolean).map(esc).join(' · ') || 'Aguardando os cortes'}</div></div>
+    <div class="culto-capa">${cu.yt?`<img src="https://i.ytimg.com/vi/${esc(cu.yt)}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">`:''}${selo}</div>
+    <div class="culto-tile-txt"><div class="t">${esc(cu.titulo || 'Culto enviado')}</div><div class="p">${[cu.pastor, data].filter(Boolean).map(esc).join(' · ') || (cu.driveNome ? esc(cu.driveNome) : 'Aguardando o vídeo')}</div></div>
   </button>`;
 }
 function renderCortes(){
@@ -1267,9 +1282,11 @@ function renderCortes(){
     const cs = cortes.filter(c => c.culto === cu.id).sort(ordemCorte);
     const pronto = cu.status === 'pronto';
     const quando = [cu.pastor, cu.data ? cu.data.split('-').reverse().join('/') : ''].filter(Boolean).map(esc).join(' · ');
-    const ini = hms2s(cu.inicio), fim = hms2s(cu.fim);
+    // o robô marca ytInicio vazio: os tempos dele são do arquivo do Drive, não do vídeo do YouTube
+    const ini = cu.ytInicio !== undefined ? hms2s(cu.ytInicio) : hms2s(cu.inicio), fim = cu.ytInicio !== undefined ? 0 : hms2s(cu.fim);
     const emb = `https://www.youtube-nocookie.com/embed/${esc(cu.yt)}?rel=0${ini?`&start=${ini}`:''}${fim?`&end=${fim}`:''}`;
     const abrir = `https://youtu.be/${esc(cu.yt)}${ini?`?t=${ini}`:''}`;
+    const quandoRobo = t => t ? new Date(t).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '';
     return `<div class="card culto">
       <div class="card-head">
         <div style="flex:1; min-width:0">
@@ -1277,17 +1294,21 @@ function renderCortes(){
           <div class="when">${quando || 'Enviado em ' + esc((cu.criado||'').split('-').reverse().join('/'))}</div>
         </div>
         <div class="card-actions">
-          <span class="badge corte-st ${pronto?'pronto':'afazer'}">${pronto?'Cortes prontos':'Aguardando cortes'}</span>
+          ${seloCulto(cu, cs.some(c => (c.status||'aprovar') === 'aprovar'))}
           <button class="btn secondary small" onclick="removerCulto('${cu.id}')">Remover</button>
         </div>
       </div>
-      ${!pronto ? `<div class="culto-espera">Link recebido. A mensagem na íntegra, a descrição e os cortes aparecem aqui assim que ficarem prontos. <a class="chip" href="${esc(cu.link)}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>` : `
+      ${!pronto ? `<div class="culto-espera">${
+          cu.status === 'producao' ? `O robô está fazendo a mensagem na íntegra, os cortes e a descrição${cu.driveNome?` de <b>${esc(cu.driveNome)}</b>`:''}. Começou às ${quandoRobo(cu.inicioProducao)}; leva cerca de 1 hora.`
+          : cu.status === 'erro' ? `Deu erro: ${esc(cu.erro||'sem detalhe')} <button class="btn small" onclick="tentarDeNovo('${cu.id}')">Tentar de novo</button>`
+          : `Link recebido. Suba o vídeo desse culto na <a href="https://drive.google.com/drive/folders/1rEWdoYDcdlfo19mXGauTbNQkUDGNEcAc" target="_blank" rel="noopener">pasta CORTES do Drive</a>; o robô começa em até 15 minutos.`
+        } ${cu.yt?`<a class="chip" href="${esc(cu.link)}" target="_blank" rel="noopener">Abrir no YouTube ↗</a>`:''}</div>` : `
       <div class="culto-sec">
         <h3>Mensagem na íntegra${cu.inicio?` · ${esc(cu.inicio)} → ${esc(cu.fim||'')}`:''}</h3>
-        <div class="culto-video">${cu.video
+        ${(cu.video || cu.yt) ? `<div class="culto-video">${cu.video
           ? `<video src="${esc(cu.video)}" controls playsinline preload="metadata"></video>`
-          : `<iframe src="${emb}" title="Mensagem na íntegra" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`}</div>
-        <div class="culto-acoes">${cu.video?`<a class="chip" href="${esc(cu.video)}" download>Baixar mensagem ↓</a>`:''}<a class="chip" href="${abrir}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>
+          : `<iframe src="${emb}" title="Mensagem na íntegra" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`}</div>` : ''}
+        <div class="culto-acoes">${cu.video?`<a class="chip" href="${esc(cu.video)}" download>Baixar mensagem ↓</a>`:''}${cu.yt?`<a class="chip" href="${abrir}" target="_blank" rel="noopener">Abrir no YouTube ↗</a>`:''}</div>
       </div>
       ${cu.descricao?`<div class="culto-sec">
         <h3>Descrição pro YouTube</h3>
