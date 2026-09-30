@@ -307,6 +307,24 @@
   .badge.corte-st.postado { background:var(--green-soft); color:var(--green); }
   a.chip { color:var(--text); text-decoration:none; } a.chip:hover { border-color:var(--accent); }
   @media (max-width:980px){ header .tabs .tab { padding:0 11px; } }
+
+  /* ===== Animação dos botões da tela principal (30/09/2026) ===== */
+  .mm-no, .mm-centro .btn { -webkit-tap-highlight-color: transparent; }
+  /* computador (tem mouse): zoom leve ao passar o mouse */
+  @media (hover:hover) and (pointer:fine) {
+    .mm-no.n1:hover { transform:scale(1.06); }
+    .mm-no.n2:hover, .mm-ramo.esq .mm-no.n2:hover { transform:scale(1.08); }
+    .mm-centro .btn:hover { transform:scale(1.04); }
+    .mm-no.n1:active, .mm-no.n2:active { transform:scale(1.02); }
+  }
+  /* celular (toque): o botão acende e afunda um pouco quando é tocado */
+  @media (hover:none), (pointer:coarse) {
+    .mm-no.n1:hover, .mm-no.n2:hover { transform:none; }
+    .mm-no.n1:active, .mm-no.n1.tocado { transform:scale(.97); border-color:var(--accent-2); background:linear-gradient(160deg, rgba(153,185,222,.28), rgba(153,185,222,.10)); box-shadow:0 0 0 2px rgba(187,208,237,.35); }
+    .mm-no.n2:active, .mm-no.n2.tocado { transform:scale(.97); border-color:var(--accent-2); background:rgba(153,185,222,.28); color:#fff; }
+    .mm-centro .btn:active, .mm-centro .btn.tocado { transform:scale(.97); filter:brightness(1.1); }
+  }
+  @media (prefers-reduced-motion:reduce){ .mm-no:hover, .mm-no:active, .mm-no.tocado, .mm-centro .btn:hover { transform:none !important; } }
 </style>
 </head>
 <body>
@@ -1259,6 +1277,13 @@ function desenharMapa(){
   svg.innerHTML = out;
 }
 window.addEventListener('resize', () => { clearTimeout(window._mmT); window._mmT = setTimeout(desenharMapa, 80); });
+
+/* toque no celular: marca o botão por um instante pra pessoa ver que foi selecionado */
+document.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse') return;
+  const b = e.target.closest('.mm-no, .mm-centro .btn'); if (!b) return;
+  b.classList.add('tocado'); setTimeout(() => b.classList.remove('tocado'), 280);
+});
 
 /* ---------- Backup ---------- */
 function exportData() {
