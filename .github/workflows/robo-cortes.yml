@@ -1,0 +1,47 @@
+# Robô de cortes do PIB News (30/09/2026).
+# A cada 15 minutos confere a pasta "CORTES" do Google Drive. Se tiver vídeo novo, faz a mensagem na íntegra,
+# os cortes pra Instagram/Shorts e a descrição do YouTube, e publica tudo na aba Cortes do app.
+name: robo-cortes
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+concurrency:
+  group: robo-cortes
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  cortes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tem vídeo novo na pasta?
+        id: ver
+        run: python robo/verificar.py
+      - name: Instalar ferramentas
+        if: steps.ver.outputs.tem == '1'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          pip install -q -U -r robo/requirements.txt && python -c "import av,faster_whisper;print(av.__version__,faster_whisper.__version__)"
+      - name: Guardar os modelos de transcrição entre execuções
+        if: steps.ver.outputs.tem == '1'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: whisper-small-medium-v1
+      - name: Fazer os cortes
+        if: steps.ver.outputs.tem == '1'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python robo/processar.py
+      - name: Guardar a transcrição (pra conferir se precisar)
+        if: always() && steps.ver.outputs.tem == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: transcricao
+          path: trabalho/transcricao.txt
+          if-no-files-found: ignore
+          retention-days: 30
