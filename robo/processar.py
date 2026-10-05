@@ -226,10 +226,13 @@ def processar():
         feitos = reels.gerar(video, todas, [(n, a, b) for n, a, b, _ in cortes], os.path.join(TRAB, 'cortes'),
                              os.path.join(TRAB, 'tmp'), plano.get('correcoes') or {})
 
-        # mensagem na íntegra em Full HD (H.264, abre em qualquer lugar)
+        # mensagem na íntegra em Full HD (H.264, abre em qualquer lugar), sem folga (nada de música) e com fade do preto no começo e pro preto no fim
         msg = os.path.join(TRAB, 'mensagem-1080p.mp4')
-        run('ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-ss', str(max(0, ini - 1)), '-to', str(fim + 1), '-i', video,
-            '-vf', "scale='min(1920,iw)':-2", '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p',
+        dur, FD = fim - ini, 1.5
+        run('ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-ss', str(ini), '-to', str(fim), '-i', video,
+            '-vf', f"scale='min(1920,iw)':-2,fade=t=in:st=0:d={FD},fade=t=out:st={dur - FD:.3f}:d={FD}",
+            '-af', f"afade=t=in:st=0:d={FD},afade=t=out:st={dur - FD:.3f}:d={FD}",
+            '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p',
             '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', msg)
         leves = []
         for nome, final, _, _ in feitos:
