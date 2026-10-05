@@ -92,8 +92,8 @@ def claude(prompt):
 PROMPT = """Você trabalha na mídia da Primeira Igreja Batista de Niterói (PIBN). Abaixo está a transcrição automática (pode ter erros de palavra) de um culto, com o tempo de cada trecho no formato [HH:MM:SS]. Nome do arquivo do vídeo: "{arquivo}".
 
 Tarefas:
-1. Ache a MENSAGEM (a pregação): "inicio" = quando o pregador começa a falar (saudação ou oração dele), "fim" = logo depois do "amém" da oração final dele. Não inclua louvor, avisos nem ofertas.
-2. Escolha de 5 a 7 CORTES da mensagem para Instagram e YouTube Shorts. Cada corte: trecho contínuo de 30 a 58 segundos, que faça sentido sozinho, começando no início de uma frase e terminando no fim de uma frase. Prefira frases fortes, histórias e aplicações. Não repita o mesmo trecho.
+1. Ache a MENSAGEM (a pregação): "inicio" = quando o pregador começa a falar, depois que a música acabou; "fim" = quando ele termina de falar, antes de qualquer música. Regra do Arthur: a mensagem NÃO pode ter nada de música, nem no começo, nem no fim, nem no apelo ou na oração (se tocar música por baixo da oração ou do apelo, termine antes dela). Não inclua louvor, avisos nem ofertas.
+2. Escolha de 5 a 7 CORTES da mensagem para Instagram e YouTube Shorts. Cada corte: trecho contínuo de 30 a 58 segundos, que faça sentido sozinho, começando no início de uma frase e terminando no fim de uma frase. Prefira frases fortes, histórias e aplicações. Não repita o mesmo trecho. Nenhum corte pode ter música (nem cantada nem tocada por baixo).
 3. Escreva a DESCRIÇÃO do YouTube da mensagem no formato abaixo (sem o rodapé; ele é colocado depois).
 4. Liste correções de palavras que a transcrição errou dentro dos cortes (ex.: nomes bíblicos, "PIV" -> "PIB").
 
