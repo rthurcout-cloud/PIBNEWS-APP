@@ -1194,6 +1194,9 @@ function ajusteCorte(id){
 }
 function irCortes(focar){ navegar('cortes'); if (focar) setTimeout(() => { const i = document.getElementById('cultoLink'); if (i) i.focus(); }, 60); }
 function ytId(u){ const m = String(u||'').match(/(?:v=|youtu\.be\/|shorts\/|live\/|embed\/)([\w-]{11})/); return m ? m[1] : ''; }
+// celular não toca a mensagem guardada nos releases do GitHub (vem como download genérico): lá mostra o YouTube no trecho da mensagem
+const NO_CELULAR = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function trocarPorYoutube(v, emb){ const f = document.createElement('iframe'); f.src = emb; f.title = 'Mensagem na íntegra'; f.allow = 'encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; v.replaceWith(f); }
 function hms2s(t){ if (!t) return 0; return String(t).split(':').reduce((a, x) => a*60 + (+x||0), 0); }
 function enviarCulto(){
   const inp = document.getElementById('cultoLink');
@@ -1230,7 +1233,7 @@ function corteHTML(c){
     <div class="t">${esc(c.titulo)}</div>
     <div class="chips"><span class="badge corte-st ${esc(st)}">${CORTE_ST[st]||st}</span>${(c.inicio||c.fim)?`<span class="chip">${esc(c.inicio||'?')} → ${esc(c.fim||'?')}</span>`:''}</div>
     ${c.notas?`<div class="leg">${esc(c.notas)}</div>`:''}
-    <div class="culto-acoes">${acoes}${c.video?`<a class="chip corte-baixar" href="${esc(c.video)}" download>Baixar ↓</a>`:''}</div>
+    <div class="culto-acoes">${acoes}${c.video?`<a class="chip corte-baixar" href="${esc(c.video)}" download target="_blank" rel="noopener">Baixar ↓</a>`:''}</div>
   </div>`;
 }
 let cultoAberto = null;
@@ -1284,10 +1287,10 @@ function renderCortes(){
       ${!pronto ? `<div class="culto-espera">Link recebido. A mensagem na íntegra, a descrição e os cortes aparecem aqui assim que ficarem prontos. <a class="chip" href="${esc(cu.link)}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>` : `
       <div class="culto-sec">
         <h3>Mensagem na íntegra${cu.inicio?` · ${esc(cu.inicio)} → ${esc(cu.fim||'')}`:''}</h3>
-        <div class="culto-video">${cu.video
-          ? `<video src="${esc(cu.video)}" controls playsinline preload="metadata"></video>`
+        <div class="culto-video">${cu.video && !NO_CELULAR
+          ? `<video src="${esc(cu.video)}" controls playsinline preload="metadata" onerror="trocarPorYoutube(this,'${emb}')"></video>`
           : `<iframe src="${emb}" title="Mensagem na íntegra" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`}</div>
-        <div class="culto-acoes">${cu.video?`<a class="chip" href="${esc(cu.video)}" download>Baixar mensagem ↓</a>`:''}<a class="chip" href="${abrir}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>
+        <div class="culto-acoes">${cu.video?`<a class="chip" href="${esc(cu.video)}" download target="_blank" rel="noopener">Baixar mensagem ↓</a>`:''}<a class="chip" href="${abrir}" target="_blank" rel="noopener">Abrir no YouTube ↗</a></div>
       </div>
       ${cu.descricao?`<div class="culto-sec">
         <h3>Descrição pro YouTube</h3>
