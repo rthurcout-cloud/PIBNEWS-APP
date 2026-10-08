@@ -41,22 +41,17 @@ module.exports = async (req, res) => {
       let body = req.body;
       if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = null; } }
       if (!body || typeof body !== 'object') { res.status(400).json({ error: 'body_invalido' }); return; }
-      // cortes (Instagram/Shorts): se quem salvou não mandou (versão antiga do app), mantém os que já estavam guardados
-      // cultos (link do YouTube -> mensagem, descrição e cortes): mesma regra
-      let cortes = Array.isArray(body.cortes) ? body.cortes : null;
-      let cultos = Array.isArray(body.cultos) ? body.cultos : null;
-      if (!cortes || !cultos) {
+      // envio sem nenhuma lista (ex.: um {} por engano) apagaria o banco inteiro: recusa
+      const CHAVES = ['gravacoes', 'pessoas', 'cortes', 'cultos'];
+      if (!CHAVES.some(k => Array.isArray(body[k]))) { res.status(409).json({ error: 'envio_vazio_recusado' }); return; }
+      // lista que não veio no envio (versão antiga do app, robô) fica como já estava guardada
+      const safe = {};
+      CHAVES.forEach(k => { safe[k] = Array.isArray(body[k]) ? body[k] : null; });
+      if (CHAVES.some(k => !safe[k])) {
         const atual = await kv(['GET', DATA_KEY]);
         const d = atual && atual.result ? JSON.parse(atual.result) : {};
-        if (!cortes) cortes = Array.isArray(d.cortes) ? d.cortes : [];
-        if (!cultos) cultos = Array.isArray(d.cultos) ? d.cultos : [];
+        CHAVES.forEach(k => { if (!safe[k]) safe[k] = Array.isArray(d[k]) ? d[k] : []; });
       }
-      const safe = {
-        gravacoes: Array.isArray(body.gravacoes) ? body.gravacoes : [],
-        pessoas: Array.isArray(body.pessoas) ? body.pessoas : [],
-        cortes,
-        cultos
-      };
       await kv(['SET', DATA_KEY, JSON.stringify(safe)]);
       res.status(200).json({ ok: true });
       return;

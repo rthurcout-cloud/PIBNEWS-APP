@@ -4,10 +4,11 @@
 2. Transcreve o culto inteiro (rápido) e pede à API do Claude: onde começa e termina a mensagem,
    de 5 a 7 cortes de até 60 s e a descrição do YouTube no formato da PIBN.
 3. Transcreve os trechos dos cortes com precisão de palavra, gera os cortes verticais e a mensagem na íntegra.
-4. Publica os vídeos como anexos (release) no GitHub e deixa o culto "Pra aprovar" no app.
+4. Publica a mensagem e os cortes em Full HD como anexos (release) no GitHub; os cortes 720p vão para a pasta cortes/ do
+   repositório e o app toca pelo jsDelivr (o release vem como download genérico e o celular não toca). Culto fica "Pra aprovar".
 Se algo der errado, o culto fica como "Deu erro" com o motivo, e nada do que já existe é apagado.
 """
-import datetime, json, os, re, subprocess, sys, time, traceback, urllib.request
+import datetime, json, os, re, shutil, subprocess, sys, time, traceback, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comum import ler_app, gravar_app, listar_drive, pendentes, http
 import reels
@@ -158,6 +159,22 @@ def publicar(tag, nome, arquivos):
 TESTE_URL = os.environ.get('TESTE_VIDEO_URL', '')  # modo teste: baixa deste link, não grava no app nem publica
 
 
+def cortes_no_repo(pasta, leves):
+    """Coloca os cortes 720p em cortes/<pasta>/ do repositório e devolve os links do jsDelivr (vídeo/mp4 de verdade, toca no celular)."""
+    destino = os.path.join('cortes', pasta); os.makedirs(destino, exist_ok=True)
+    for nome, leve in leves: shutil.copy(leve, os.path.join(destino, nome + '-720p.mp4'))
+    run('git', 'config', 'user.name', 'robo-cortes'); run('git', 'config', 'user.email', 'robo-cortes@users.noreply.github.com')
+    run('git', 'add', '-f', destino); run('git', 'commit', '-q', '-m', f'Robô: cortes 720p {pasta}')
+    for tentativa in range(3):
+        try:
+            run('git', 'pull', '-q', '--rebase', 'origin', 'main'); run('git', 'push', '-q', 'origin', 'HEAD:main'); break
+        except Exception:
+            if tentativa == 2: raise
+            time.sleep(10)
+    sha = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True).stdout.strip()
+    return {nome: f'https://cdn.jsdelivr.net/gh/{REPO}@{sha}/cortes/{pasta}/{nome}-720p.mp4' for nome, _ in leves}
+
+
 def processar():
     if TESTE_URL:
         return teste()
@@ -247,6 +264,7 @@ def processar():
         for (nome, final, _, _), leve in zip(feitos, leves):
             arqs += [(nome + '-hd', final, nome + '.mp4'), (nome, leve, nome + '-720p.mp4')]
         urls = publicar(tag, f'{plano.get("culto") or "Culto"} {data} · {plano.get("titulo", "")}'.strip(), arqs)
+        no_repo = cortes_no_repo(tag[len('culto-'):], [(nome, leve) for (nome, _, _, _), leve in zip(feitos, leves)])
 
         descricao = (plano.get('descricao') or '').strip() + '\n\n' + RODAPE
         pastor = plano.get('pregador') or ''
@@ -256,7 +274,7 @@ def processar():
             novos_cortes.append({'id': f'co{cid}{k:02d}', 'culto': cid, 'titulo': c['titulo'],
                                  'mensagem': ' · '.join(x for x in [plano.get('culto') or '', plano.get('titulo') or '', f'({ref})' if ref else ''] if x),
                                  'pastor': pastor, 'link': alvo.get('link') or '', 'inicio': hms(a), 'fim': hms(b), 'plataforma': 'ambos',
-                                 'status': 'aprovar', 'postado': '', 'video': urls[nome], 'videoHD': urls[nome + '-hd'],
+                                 'status': 'aprovar', 'postado': '', 'video': no_repo[nome], 'videoGithub': urls[nome], 'videoHD': urls[nome + '-hd'],
                                  'notas': 'Legenda sugerida: ' + (c.get('legenda_post') or '').strip(), 'criado': hoje, 'ordem': k})
 
         def concluir(db):
