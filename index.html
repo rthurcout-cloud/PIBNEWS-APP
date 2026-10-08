@@ -334,6 +334,16 @@
   .culto-rodando::before { animation:rodando 1.2s ease-in-out infinite; }
   @keyframes rodando { 50% { opacity:.2; } }
   .culto-espera a:not(.chip) { color:var(--accent-text); }
+  .btn-cortar { position:relative; overflow:hidden; display:inline-flex; align-items:center; gap:8px; margin:12px 8px 0 0; padding:12px 22px; border:0; border-radius:99px; cursor:pointer;
+    font:inherit; font-weight:700; font-size:15px; color:#0B1628; background:linear-gradient(100deg,#99B9DE 0%,#BBD0ED 40%,#FFFFFF 50%,#BBD0ED 60%,#99B9DE 100%); background-size:250% 100%;
+    animation:cortarBrilho 2.6s linear infinite, cortarPulso 2s ease-in-out infinite; }
+  .btn-cortar:active { transform:scale(.97); }
+  .btn-cortar svg { width:18px; height:18px; }
+  @keyframes cortarBrilho { from { background-position:100% 0; } to { background-position:-150% 0; } }
+  @keyframes cortarPulso { 0%,100% { box-shadow:0 0 0 0 rgba(153,185,222,.55); } 50% { box-shadow:0 0 0 12px rgba(153,185,222,0); } }
+  .pedido-corte { display:inline-flex; align-items:center; gap:10px; margin:12px 8px 8px 0; padding:10px 16px; border-radius:18px; background:rgba(153,185,222,.14); color:var(--accent-text); font-weight:600; }
+  .pedido-corte i { width:10px; height:10px; border-radius:50%; background:#99B9DE; animation:rodando 1.2s ease-in-out infinite; box-shadow:0 0 12px #99B9DE; }
+  @media (prefers-reduced-motion:reduce){ .btn-cortar, .pedido-corte i { animation:none; } }
   @media (hover:hover) and (pointer:fine){ .culto-tile:hover { transform:scale(1.03); border-color:var(--accent-2); box-shadow:0 14px 30px -14px rgba(0,0,0,.6); } }
   .culto-tile:active { transform:scale(.97); border-color:var(--accent-2); }
   @media (max-width:640px){ .cultos-grid { grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; } .culto-tile-txt { padding:10px; } .culto-tile-txt .t { font-size:14px; } }
@@ -1247,8 +1257,15 @@ function fecharCulto(){ cultoAberto = null; renderCortes(); window.scrollTo({ to
 function seloCulto(cu, pend){
   if (cu.status === 'producao') return '<span class="badge corte-st edicao culto-rodando">Em produção</span>';
   if (cu.status === 'erro') return '<span class="badge corte-st erro">Deu erro</span>';
+  if (cu.status !== 'pronto' && cu.pedidoCorte) return '<span class="badge corte-st edicao culto-rodando">Pedido de corte</span>';
   if (cu.status !== 'pronto') return '<span class="badge corte-st afazer">Aguardando vídeo</span>';
   return pend ? '<span class="badge corte-st aprovar">Pra aprovar</span>' : '<span class="badge corte-st pronto">Cortes prontos</span>';
+}
+// pedido de corte: fica guardado no culto; quem processa (robô ou o Claude no computador) vê e começa
+function cortarAgora(id){
+  const c = (db.cultos||[]).find(x => x.id === id); if (!c) return;
+  c.pedidoCorte = new Date().toISOString(); c.status = c.status === 'erro' ? 'aguardando' : (c.status || 'aguardando');
+  save(); renderCortes();
 }
 function tentarDeNovo(id){
   const c = (db.cultos||[]).find(x => x.id === id); if (!c) return;
@@ -1304,7 +1321,8 @@ function renderCortes(){
       ${!pronto ? `<div class="culto-espera">${
           cu.status === 'producao' ? `O robô está fazendo a mensagem na íntegra, os cortes e a descrição${cu.driveNome?` de <b>${esc(cu.driveNome)}</b>`:''}. Começou às ${quandoRobo(cu.inicioProducao)}; leva cerca de 1 hora.`
           : cu.status === 'erro' ? `Deu erro: ${esc(cu.erro||'sem detalhe')} <button class="btn small" onclick="tentarDeNovo('${cu.id}')">Tentar de novo</button>`
-          : `Link recebido. Suba o vídeo desse culto na <a href="https://drive.google.com/drive/folders/1rEWdoYDcdlfo19mXGauTbNQkUDGNEcAc" target="_blank" rel="noopener">pasta CORTES do Drive</a>; o robô começa em até 15 minutos.`
+          : cu.pedidoCorte ? `<span class="pedido-corte"><i></i>Pedido de corte enviado às ${quandoRobo(cu.pedidoCorte)}. Quando o corte começar, o selo muda pra Em produção.</span>`
+          : `Link recebido. Quando quiser os cortes, toque em Cortar agora.<br><button class="btn-cortar" onclick="cortarAgora('${cu.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg>Cortar agora</button>`
         } ${cu.yt?`<a class="chip" href="${esc(cu.link)}" target="_blank" rel="noopener">Abrir no YouTube ↗</a>`:''}</div>` : `
       <div class="culto-sec">
         <h3>Mensagem na íntegra${cu.inicio?` · ${esc(cu.inicio)} → ${esc(cu.fim||'')}`:''}</h3>
