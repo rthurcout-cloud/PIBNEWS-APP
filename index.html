@@ -1508,9 +1508,12 @@ async function estadoAvisos() {
   if (Notification.permission === 'denied') { txt.textContent = 'Os avisos estão bloqueados. Libere nas configurações do navegador pra este site.'; btn.style.display = 'none'; return; }
   const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
   btn.style.display = '';
-  if (sub) { txt.textContent = 'Ativado neste aparelho. Você recebe uma mensagem quando os cortes de um culto ficam prontos.'; btn.textContent = 'Desativar avisos'; btn.dataset.on = '1'; }
-  else { txt.textContent = 'Receba uma mensagem neste aparelho quando os cortes de um culto ficarem prontos.'; btn.textContent = 'Ativar avisos'; btn.dataset.on = ''; }
+  if (sub) { avisosAtivo = true; txt.style.display = 'none'; btn.style.display = 'none'; btn.dataset.on = '1'; }      // já ativado: some a mensagem e a opção de desativar
+  else { avisosAtivo = false; txt.style.display = ''; btn.style.display = ''; txt.textContent = 'Receba uma mensagem neste aparelho quando os cortes de um culto ficarem prontos.'; btn.textContent = 'Ativar avisos'; btn.dataset.on = ''; }
+  ajustaCardAvisos();
 }
+let avisosAtivo = false, avisosTem = false;
+function ajustaCardAvisos() { document.getElementById('cardAvisos').style.display = (avisosAtivo && !avisosTem) ? 'none' : ''; }   // ativado e sem histórico: o cartão inteiro some
 async function alternarAvisos() {
   const btn = document.getElementById('btnAvisos'), txt = document.getElementById('avisosTexto');
   btn.disabled = true;
@@ -1535,7 +1538,7 @@ async function alternarAvisos() {
 async function ultimosAvisos() {
   try {
     const r = await fetch('/api/push?avisos=1', { headers: authHeaders() }); if (!r.ok) return;
-    const av = (await r.json()).avisos || [], el = document.getElementById('avisosUltimos');
+    const av = (await r.json()).avisos || [], el = document.getElementById('avisosUltimos'); avisosTem = av.length > 0; ajustaCardAvisos();
     el.innerHTML = av.length ? '<b>Últimos avisos</b><br>' + av.slice(0, 3).map(a => {
       const d = new Date(a.quando), h = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       return h + ' · ' + String(a.culto).replace(/[<>&]/g, '') + ': ' + a.cortes + (a.cortes === 1 ? ' corte pronto' : ' cortes prontos');
