@@ -466,6 +466,12 @@
         <button class="btn" onclick="enviarCulto()">Enviar</button>
       </div>
     </div>
+    <div class="card culto-novo" id="cardAvisos">
+      <div class="title">🔔 Avisos de cortes prontos</div>
+      <div class="when" id="avisosTexto">Verificando…</div>
+      <div class="culto-acoes"><button class="btn small" id="btnAvisos" onclick="alternarAvisos()" style="display:none">Ativar avisos</button></div>
+      <div id="avisosUltimos" class="when" style="margin-top:10px"></div>
+    </div>
     <div id="lista-cortes"></div>
   </div>
 </main>
@@ -1483,6 +1489,66 @@ function importData(ev) {
 function esc(s){ return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 /* ---------- Init ---------- */
+
+/* ---------- Avisos de cortes prontos (notificação no celular) ---------- */
+function b64ParaBytes(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4), raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(raw, c => c.charCodeAt(0));
+}
+const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const instalado = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+async function estadoAvisos() {
+  const txt = document.getElementById('avisosTexto'), btn = document.getElementById('btnAvisos');
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    txt.textContent = ehIOS && !instalado
+      ? 'No iPhone, primeiro adicione o app à Tela de Início (Compartilhar > Adicionar à Tela de Início) e abra por lá. Aí dá pra ativar os avisos.'
+      : 'Este navegador não recebe avisos no celular.';
+    btn.style.display = 'none'; return;
+  }
+  if (Notification.permission === 'denied') { txt.textContent = 'Os avisos estão bloqueados. Libere nas configurações do navegador pra este site.'; btn.style.display = 'none'; return; }
+  const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+  btn.style.display = '';
+  if (sub) { txt.textContent = 'Ativado neste aparelho. Você recebe uma mensagem quando os cortes de um culto ficam prontos.'; btn.textContent = 'Desativar avisos'; btn.dataset.on = '1'; }
+  else { txt.textContent = 'Receba uma mensagem neste aparelho quando os cortes de um culto ficarem prontos.'; btn.textContent = 'Ativar avisos'; btn.dataset.on = ''; }
+}
+async function alternarAvisos() {
+  const btn = document.getElementById('btnAvisos'), txt = document.getElementById('avisosTexto');
+  btn.disabled = true;
+  try {
+    const reg = await navigator.serviceWorker.ready, atual = await reg.pushManager.getSubscription();
+    if (atual) {
+      await fetch('/api/push', { method: 'DELETE', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ endpoint: atual.endpoint }) });
+      await atual.unsubscribe();
+    } else {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { txt.textContent = 'Sem permissão, não dá pra mandar avisos.'; btn.disabled = false; return; }
+      const chave = (await (await fetch('/api/push')).json()).publicKey;
+      if (!chave) throw new Error('avisos ainda não configurados no servidor');
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ParaBytes(chave) });
+      const r = await fetch('/api/push', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ subscription: sub.toJSON() }) });
+      if (!r.ok) { await sub.unsubscribe(); throw new Error('o servidor recusou (' + r.status + ')'); }
+    }
+    await estadoAvisos();
+  } catch (e) { txt.textContent = 'Não consegui mudar os avisos: ' + (e.message || e); }
+  btn.disabled = false;
+}
+async function ultimosAvisos() {
+  try {
+    const r = await fetch('/api/push?avisos=1', { headers: authHeaders() }); if (!r.ok) return;
+    const av = (await r.json()).avisos || [], el = document.getElementById('avisosUltimos');
+    el.innerHTML = av.length ? '<b>Últimos avisos</b><br>' + av.slice(0, 3).map(a => {
+      const d = new Date(a.quando), h = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      return h + ' · ' + String(a.culto).replace(/[<>&]/g, '') + ': ' + a.cortes + (a.cortes === 1 ? ' corte pronto' : ' cortes prontos');
+    }).join('<br>') : '';
+  } catch (e) {}
+}
+(function iniciarAvisos() {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').then(() => { estadoAvisos(); }).catch(() => { document.getElementById('avisosTexto').textContent = 'Avisos indisponíveis neste navegador.'; });
+  else estadoAvisos();
+  ultimosAvisos();
+  if (location.hash === '#cortes') setTimeout(() => { try { navegar('cortes'); } catch (e) {} }, 700);   // ao tocar na notificação, abre a aba Cortes
+})();
+
 (async function boot() {
   const ok = await carregarDoServidor();
   renderTudo();
