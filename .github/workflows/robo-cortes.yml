@@ -36,6 +36,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
         run: python robo/processar.py
       - name: Guardar a transcrição (pra conferir se precisar)
         if: always() && steps.ver.outputs.tem == '1'

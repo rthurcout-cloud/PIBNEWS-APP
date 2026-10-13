@@ -159,6 +159,22 @@ def publicar(tag, nome, arquivos):
 TESTE_URL = os.environ.get('TESTE_VIDEO_URL', '')  # modo teste: baixa deste link, não grava no app nem publica
 
 
+def avisar_cortes(culto, n, titulo=''):
+    """Webhook: avisa o app que os cortes ficaram prontos (o app manda a notificação pro celular de quem ativou os avisos).
+    Nunca derruba o robô: se der erro, só registra no log."""
+    segredo = os.environ.get('WEBHOOK_SECRET', '')
+    if not segredo:
+        print('aviso de cortes prontos: WEBHOOK_SECRET não configurado, pulando', flush=True); return
+    url = os.environ.get('WEBHOOK_URL', 'https://pibnews-app.vercel.app/api/webhook-cortes')
+    try:
+        req = urllib.request.Request(url, data=json.dumps({'culto': culto, 'cortes': n, 'titulo': titulo}).encode('utf-8'), method='POST',
+                                     headers={'Content-Type': 'application/json', 'x-webhook-secret': segredo, 'User-Agent': 'robo-cortes'})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            print('aviso de cortes prontos enviado:', r.read().decode('utf-8')[:200], flush=True)
+    except Exception as e:
+        print('aviso de cortes prontos falhou (não afeta os cortes):', e, flush=True)
+
+
 def cortes_no_repo(pasta, leves):
     """Coloca os cortes 720p em cortes/<pasta>/ do repositório e devolve os links do jsDelivr (vídeo/mp4 de verdade, toca no celular)."""
     destino = os.path.join('cortes', pasta); os.makedirs(destino, exist_ok=True)
@@ -287,6 +303,8 @@ def processar():
                               'fimProducao': datetime.datetime.utcnow().isoformat() + 'Z'})
         gravar_app(concluir)
         print('PRONTO:', plano.get('titulo'), '-', len(novos_cortes), 'cortes', flush=True)
+        dd = '/'.join(reversed((data or hoje)[5:].split('-'))) if (data or hoje) else ''
+        avisar_cortes(f'{plano.get("culto") or "Culto"} {dd}'.strip(), len(novos_cortes), plano.get('titulo') or '')
     except Exception as e:
         traceback.print_exc()
         atualizar({'status': 'erro', 'erro': str(e)[:300]})
