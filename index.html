@@ -1291,7 +1291,9 @@ function cultoTile(cu){
 }
 function renderCortes(){
   const el = document.getElementById('lista-cortes'); if (!el) return;
-  const cultos = (db.cultos||[]).slice().sort((a,b) => (b.data||b.criado||'').localeCompare(a.data||a.criado||''));
+  // do mais recente pro mais antigo: data do culto; no mesmo dia, noite antes da manhã; depois, o que foi enviado por último
+  const periodo = cu => /noite/i.test(cu.culto||'') ? 3 : /tarde/i.test(cu.culto||'') ? 2 : /manh/i.test(cu.culto||'') ? 1 : 0;
+  const cultos = (db.cultos||[]).slice().sort((a,b) => (b.data||b.criado||'').localeCompare(a.data||a.criado||'') || (periodo(b)-periodo(a)) || (b.criado||'').localeCompare(a.criado||''));
   const cortes = db.cortes || [];
   const ordemCorte = (a,b) => (a.ordem||0)-(b.ordem||0);
   const aberto = cultos.find(c => c.id === cultoAberto);
