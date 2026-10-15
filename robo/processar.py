@@ -35,6 +35,15 @@ def hms(t):
     t = int(round(t)); return f'{t // 3600:02d}:{t % 3600 // 60:02d}:{t % 60:02d}'
 
 
+# descrição do short: legenda + o link completo da live, do jeito que o Arthur pediu (15/10/2026)
+FRASE_INTEGRA = 'Para ver o vídeo na íntegra, entre nesse link aqui, que é o link da live completa:'
+
+
+def legenda_short(legenda, link):
+    txt = 'Legenda sugerida: ' + (legenda or '').strip()
+    return txt + (f'\n\n{FRASE_INTEGRA}\n{link.strip()}' if link else '')
+
+
 def seg(s):
     p = [float(x) for x in str(s).strip().split(':')]
     while len(p) < 3: p.insert(0, 0)
@@ -291,7 +300,7 @@ def processar():
                                  'mensagem': ' · '.join(x for x in [plano.get('culto') or '', plano.get('titulo') or '', f'({ref})' if ref else ''] if x),
                                  'pastor': pastor, 'link': alvo.get('link') or '', 'inicio': hms(a), 'fim': hms(b), 'plataforma': 'ambos',
                                  'status': 'aprovar', 'postado': '', 'video': no_repo[nome], 'videoGithub': urls[nome], 'videoHD': urls[nome + '-hd'],
-                                 'notas': 'Legenda sugerida: ' + (c.get('legenda_post') or '').strip(), 'criado': hoje, 'ordem': k})
+                                 'notas': legenda_short(c.get('legenda_post'), alvo.get('link')), 'criado': hoje, 'ordem': k})
 
         def concluir(db):
             db['cortes'] = [x for x in db.get('cortes', []) if x.get('culto') != cid] + novos_cortes

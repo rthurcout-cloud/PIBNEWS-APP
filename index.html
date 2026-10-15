@@ -1240,6 +1240,14 @@ function copiarDesc(id){
   if (navigator.clipboard) navigator.clipboard.writeText(t.value).then(ok, () => { t.select(); document.execCommand('copy'); ok(); });
   else { t.select(); document.execCommand('copy'); ok(); }
 }
+// legenda do short pra colar no YouTube/Instagram: tira o "Legenda sugerida:" e os pedidos de ajuste
+function copiarLegenda(id){
+  const c = (db.cortes||[]).find(x=>x.id===id); if (!c || !c.notas) return;
+  const txt = c.notas.split(String.fromCharCode(10)).filter(l => !/^Ajuste pedido/.test(l)).join(String.fromCharCode(10)).replace(/^Legenda sugerida:\s*/, '').trim();
+  const ok = () => { const b = document.getElementById('copiar-' + id); if (b) { b.textContent = 'Copiado ✓'; setTimeout(() => b.textContent = 'Copiar legenda', 1800); } };
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok, () => { prompt('Copie a legenda:', txt); });
+  else prompt('Copie a legenda:', txt);
+}
 function postadoCorte(id){
   const c = (db.cortes||[]).find(x=>x.id===id); if (!c) return;
   c.status = 'postado'; save(); renderCortes();
@@ -1254,7 +1262,7 @@ function corteHTML(c){
     <div class="t">${esc(c.titulo)}</div>
     <div class="chips"><span class="badge corte-st ${esc(st)}">${CORTE_ST[st]||st}</span>${(c.inicio||c.fim)?`<span class="chip">${esc(c.inicio||'?')} → ${esc(c.fim||'?')}</span>`:''}</div>
     ${c.notas?`<div class="leg">${esc(c.notas)}</div>`:''}
-    <div class="culto-acoes">${acoes}${c.video?`<a class="chip corte-baixar" href="${esc(c.videoHD || c.video)}" download target="_blank" rel="noopener">Baixar${c.videoHD?' em Full HD':''} ↓</a>`:''}</div>
+    <div class="culto-acoes">${acoes}${c.notas?`<button class="btn secondary small" id="copiar-${c.id}" onclick="copiarLegenda('${c.id}')">Copiar legenda</button>`:''}${c.video?`<a class="chip corte-baixar" href="${esc(c.videoHD || c.video)}" download target="_blank" rel="noopener">Baixar${c.videoHD?' em Full HD':''} ↓</a>`:''}</div>
   </div>`;
 }
 let cultoAberto = null;
