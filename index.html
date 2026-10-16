@@ -1567,6 +1567,30 @@ async function ultimosAvisos() {
   renderTudo();
   if (ok) setInterval(sincronizarBaixar, 7000);
 })();
+
+// Sempre atualizado (15/10/2026): ao voltar pro app, puxa os dados na hora; se saiu versão nova do app, recarrega sozinho
+// (no celular o app instalado fica aberto por dias e nunca pegava o código novo).
+(function sempreAtualizado() {
+  let versao = null;
+  async function conferirVersao() {
+    try {
+      const r = await fetch('/?v=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+      const v = r.headers.get('etag') || r.headers.get('last-modified');
+      if (!v) return;
+      if (versao === null) { versao = v; return; }
+      if (v !== versao && !document.querySelector('.overlay.open') && !enviando && !pendente) location.reload();
+    } catch (e) {}
+  }
+  function voltou() {
+    if (document.visibilityState !== 'visible') return;
+    sincronizarBaixar(); conferirVersao();
+  }
+  document.addEventListener('visibilitychange', voltou);
+  window.addEventListener('focus', voltou);
+  window.addEventListener('pageshow', e => { if (e.persisted) voltou(); });
+  conferirVersao();
+  setInterval(conferirVersao, 60000);
+})();
 </script>
 </body>
 </html>
