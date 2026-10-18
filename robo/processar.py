@@ -39,9 +39,15 @@ def hms(t):
 FRASE_INTEGRA = 'Para ver o vídeo na íntegra, entre nesse link aqui, que é o link da live completa:'
 
 
+# fim padrão de toda legenda de corte (pedido do Arthur, 18/10/2026)
+RODAPE_CORTE = ('Se você entregou sua vida para Jesus, compartilhe conosco essa decisão, acesse: https://inchur.ch/70ovN\n\n'
+                'Quer se tornar membro da nossa igreja acesse o link e comece sua jornada https://linktr.ee/pibniteroi\n\n'
+                'Continue suas ofertas e contribuições através do link: https://pibn.org.br/contribua')
+
+
 def legenda_short(legenda, link):
     txt = 'Legenda sugerida: ' + (legenda or '').strip()
-    return txt + (f'\n\n{FRASE_INTEGRA}\n{link.strip()}' if link else '')
+    return txt + (f'\n\n{FRASE_INTEGRA}\n{link.strip()}' if link else '') + '\n\n' + RODAPE_CORTE
 
 
 def seg(s):
