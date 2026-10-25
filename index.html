@@ -1397,6 +1397,7 @@ function renderMapa(){
       { t:'Pessoas da equipe', act:"navegar('pessoas')" },
       { t:'Roteiros: a escrever', act:"navegar('roteiro')" },
       { t:'Roteiros prontos', act:"navegar('roteiro')" },
+      { t:'Nova gravação', mais:true, act:'openGravacao()' },
       { t:'Novo roteiro', mais:true, act:'novoRoteiro()' } ] },
     { id:'agenda', t:'Agenda', sub:`${MESES_PT[agora.getMonth()]} ${agora.getFullYear()}`, lado:'dir', folhas:[
       { t:'Ver o mês', act:"navegar('calendario')" },
@@ -1422,7 +1423,6 @@ function renderMapa(){
         <h2>Sistema PIBN</h2>
         <p class="prox">${prox ? `Próxima: <b>${ddmm(prox.data)}${prox.hora?' · '+esc(prox.hora):''}</b><br>${esc(prox.titulo||'')}` : 'Nenhuma gravação marcada'}</p>
 
-        <button class="btn" onclick="openGravacao()">${mmIco('mais','ico')} Nova gravação</button>
       </div>
       <div class="mm-col dir">${ramos.filter(r=>r.lado==='dir').map(ramo).join('')}</div>
     </div>`;
