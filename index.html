@@ -1421,7 +1421,6 @@ function renderMapa(){
       <div class="mm-centro" id="mmCentro">
         <div class="mm-anel"><i></i></div>
         <h2>Sistema PIBN</h2>
-        <p class="prox">${prox ? `Próxima: <b>${ddmm(prox.data)}${prox.hora?' · '+esc(prox.hora):''}</b><br>${esc(prox.titulo||'')}` : 'Nenhuma gravação marcada'}</p>
 
       </div>
       <div class="mm-col dir">${ramos.filter(r=>r.lado==='dir').map(ramo).join('')}</div>
