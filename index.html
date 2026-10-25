@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gravações PIBN</title>
+<title>Sistema PIBN</title>
 <meta name="theme-color" content="#0B1628">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -390,7 +390,7 @@
 </head>
 <body>
 <header>
-  <div class="brand" onclick="navegar('home')" title="Voltar ao início"><div class="logo"><i></i></div><div><small>PIB News</small><h1>Gravações PIBN</h1></div></div>
+  <div class="brand" onclick="navegar('home')" title="Voltar ao início"><div class="logo"><i></i></div><div><h1>Sistema PIBN</h1></div></div>
   <span id="sync" class="sync">Conectando…</span>
   <nav class="tabs" aria-label="Menu">
     <button class="tab" data-view="home"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg> Início</button>
@@ -1422,7 +1422,7 @@ function renderMapa(){
       <div class="mm-col esq">${ramos.filter(r=>r.lado==='esq').map(ramo).join('')}</div>
       <div class="mm-centro" id="mmCentro">
         <div class="mm-anel"><i></i></div>
-        <small>PIB News</small><h2>Gravações PIBN</h2>
+        <h2>Sistema PIBN</h2>
         <p class="prox">${prox ? `Próxima: <b>${ddmm(prox.data)}${prox.hora?' · '+esc(prox.hora):''}</b><br>${esc(prox.titulo||'')}` : 'Nenhuma gravação marcada'}</p>
 
         <button class="btn" onclick="openGravacao()">${mmIco('mais','ico')} Nova gravação</button>

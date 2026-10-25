@@ -1,6 +1,6 @@
 {
-  "name": "Controle de Gravações",
-  "short_name": "Gravações",
+  "name": "Sistema PIBN",
+  "short_name": "Sistema PIBN",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
