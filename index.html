@@ -1390,21 +1390,19 @@ function renderMapa(){
   const agora = new Date();
   const cs = db.cortes || [], ccnt = k => cs.filter(x=>x.status===k).length;
   const ramos = [
-    { id:'gravacoes', t:'Gravações', sub:'Lista e status', lado:'esq', folhas:[
+    { id:'gravacoes', t:'Gravações', sub:'Lista, status e roteiros', lado:'esq', folhas:[
       { t:'Próximas gravações', act:"irAgenda('agendada')" },
       { t:'Gravadas', act:"irAgenda('gravada')" },
       { t:'Canceladas', act:"irAgenda('cancelada')" },
       { t:'Pessoas da equipe', act:"navegar('pessoas')" },
-      { t:'Nova gravação', mais:true, act:'openGravacao()' } ] },
-    { id:'agenda', t:'Agenda', sub:`${MESES_PT[agora.getMonth()]} ${agora.getFullYear()}`, lado:'esq', folhas:[
+      { t:'Roteiros: a escrever', act:"navegar('roteiro')" },
+      { t:'Roteiros prontos', act:"navegar('roteiro')" },
+      { t:'Nova gravação', mais:true, act:'openGravacao()' },
+      { t:'Novo roteiro', mais:true, act:'novoRoteiro()' } ] },
+    { id:'agenda', t:'Agenda', sub:`${MESES_PT[agora.getMonth()]} ${agora.getFullYear()}`, lado:'dir', folhas:[
       { t:'Ver o mês', act:"navegar('calendario')" },
       { t: prox ? `Próxima · ${ddmm(prox.data)}` : 'Nenhuma gravação marcada', n: prox ? (prox.titulo||'') : '', act: prox ? `openGravacao('${prox.id}')` : 'openGravacao()' },
       { t:'Agendar gravação', mais:true, act:'openGravacao()' } ] },
-    { id:'roteiros', t:'Roteiros', sub:'Escrever e revisar', lado:'dir', folhas:[
-      { t:'A escrever', act:"navegar('roteiro')" },
-      { t:'Roteiros prontos', act:"navegar('roteiro')" },
-      { t:'Gravadas com sucesso', act:"navegar('roteiro')" },
-      { t:'Novo roteiro', mais:true, act:'novoRoteiro()' } ] },
     { id:'cortes', t:'Cortes', sub:'Instagram e Shorts', lado:'dir', folhas:[
       { t:'Cortes pra aprovar', act:"irCortes()" },
       { t:'Mensagens na íntegra', act:"irCortes()" },
