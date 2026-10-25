@@ -43,7 +43,7 @@ async function carregar(){
   if (!r.ok) { $('aviso').innerHTML = 'Apresentação não encontrada.<small>Confira o link na lista de apresentações.</small>'; return; }
   const j = await r.json(); apres = j.apresentacao; document.title = apres.titulo + ' · Telão';
   if (apres.status !== 'pronta' || !apres.slides.length) { $('aviso').innerHTML = `"${apres.titulo}" ainda está sendo montada.<small>Quando ficar pronta, esta tela atualiza sozinha.</small>`; setTimeout(carregar, 15000); return; }
-  $('palco').innerHTML = apres.slides.map(h => `<section class="slide">${h}</section>`).join('');
+  $('palco').innerHTML = apres.slides.map(h => `<section class="slide${h.includes('capa-marca') ? ' capa' : ''}">${h}</section>`).join('');
   slides = [...document.querySelectorAll('#palco .slide')];
   $('aviso').hidden = true; $('palco').hidden = false; $('hudT').textContent = apres.titulo; ajustar(); mostrar(j.atual || 0); sincronizar();
 }
