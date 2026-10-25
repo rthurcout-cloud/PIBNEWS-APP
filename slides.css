@@ -1,0 +1,50 @@
+/* Estilo dos slides do telão: padrão de apresentação PIBN aprovado em 25/10/2026 (_SISTEMA/templates/apresentacao-pibn).
+   Cada slide é um <section class="slide"> de 1920x1080; o telão e o controle só reduzem a escala. */
+.slide{ width:1920px; height:1080px; position:relative; overflow:hidden; background:#BBD0ED; font-family:'Archivo',sans-serif; font-stretch:125%; color:#fff; }
+.slide *{ margin:0; padding:0; box-sizing:border-box; }
+.slide .sombra{ position:absolute; inset:0; background:
+    radial-gradient(1100px 700px at -4% 108%, rgba(120,158,206,.75), transparent 62%),
+    radial-gradient(900px 600px at 104% -8%, rgba(223,234,246,.55), transparent 60%); }
+.slide .marca{ position:absolute; left:50%; top:50%; transform:translate(-50%,-52%);
+  font-family:'Anton',sans-serif; font-size:780px; line-height:1; letter-spacing:10px;
+  color:#9EBBD8; opacity:.5; white-space:nowrap; }
+.slide .marca.menor{ font-size:560px; }
+.slide .logo{ position:absolute; right:110px; top:70px; width:230px; }
+.slide .rodape{ position:absolute; left:120px; bottom:56px; color:#1F3A5F; font-weight:500; font-size:26px; letter-spacing:1px; text-transform:uppercase; }
+.slide .rodape b{ font-weight:800; }
+.slide .pag{ position:absolute; right:120px; bottom:56px; color:#1F3A5F; font-weight:500; font-size:26px; }
+.slide .cab{ position:absolute; left:120px; top:90px; text-transform:uppercase; }
+.slide .cab .fino{ display:block; font-weight:300; font-size:54px; letter-spacing:5px; line-height:1; }
+.slide .cab .forte{ display:block; font-weight:900; font-size:104px; letter-spacing:1px; line-height:.95; margin-top:8px; }
+.slide .cab .linha{ width:120px; height:7px; background:#fff; border-radius:4px; margin-top:28px; }
+.slide .cab .total{ position:absolute; left:0; top:100%; margin-top:40px; white-space:nowrap; color:#1F3A5F; font-weight:800; font-size:34px; letter-spacing:2px; }
+.slide .lista{ position:absolute; left:120px; right:120px; top:470px; color:#1F3A5F; }
+.slide .lista.duas{ columns:2; column-gap:80px; }
+.slide .lista.duas .item{ padding:10px 0; }
+.slide .lista.duas .item .nome{ font-size:35px; }
+.slide .lista.duas .item .de{ font-size:23px; }
+.slide .item{ break-inside:avoid; display:flex; align-items:baseline; gap:22px; padding:12px 0 12px; border-bottom:2px solid rgba(31,58,95,.18); }
+.slide .item .n{ font-weight:900; font-size:30px; min-width:52px; color:#fff; background:#1F3A5F; border-radius:10px; text-align:center; padding:4px 0; line-height:1; align-self:center; }
+.slide .item .nome{ font-weight:800; font-size:38px; line-height:1.1; }
+.slide .item .de{ display:block; font-weight:500; font-size:26px; margin-top:4px; color:#2F4E78; }
+.slide .lista.grande .item{ padding:20px 0; }
+.slide .lista.grande .item .nome{ font-size:52px; }
+.slide .lista.grande .item .n{ font-size:36px; min-width:64px; }
+.slide .texto{ position:absolute; left:120px; right:120px; top:470px; color:#1F3A5F; font-weight:500; font-size:40px; line-height:1.35; }
+.slide .texto p{ margin:0 0 22px; }
+.slide .texto b{ font-weight:800; }
+.slide.capa .cab{ top:300px; }
+.slide.capa .cab .fino{ font-size:72px; }
+.slide.capa .cab .forte{ font-size:150px; }
+.slide.capa .logo{ width:360px; right:130px; top:110px; }
+.slide.capa .data{ margin-top:44px; color:#1F3A5F; font-weight:800; font-size:48px; letter-spacing:3px; }
+.slide.capa .sub{ margin-top:10px; color:#1F3A5F; font-weight:500; font-size:36px; text-transform:none; }
+.slide .kpis{ position:absolute; left:120px; right:120px; top:430px; display:grid; grid-template-columns:repeat(4,1fr); gap:36px; }
+.slide .kpi{ background:rgba(255,255,255,.55); border-radius:30px; padding:40px 36px 36px; color:#1F3A5F; }
+.slide .kpi .v{ font-weight:900; font-size:118px; line-height:1; letter-spacing:-2px; }
+.slide .kpi .l{ font-weight:700; font-size:28px; text-transform:uppercase; letter-spacing:2px; margin-top:14px; line-height:1.15; }
+.slide .kpi.destaque{ background:#1F3A5F; color:#fff; }
+.slide .kpi.destaque .l{ color:#BBD0ED; }
+.slide .resumo{ position:absolute; left:120px; right:120px; top:790px; display:flex; gap:28px; color:#1F3A5F; font-weight:700; font-size:30px; text-transform:uppercase; letter-spacing:1px; }
+.slide .resumo span{ background:rgba(255,255,255,.45); border-radius:16px; padding:16px 26px; }
+.slide .resumo span b{ font-weight:900; font-size:40px; margin-right:8px; }

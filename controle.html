@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Controle · Sistema PIBN</title>
+<!-- Controle remoto no celular: anterior/próximo, pular pra qualquer slide; o telão (telao.html) segue. Visual escuro do Sistema PIBN. 25/10/2026. -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@125,300;125,500;125,700;125,800;125,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="slides.css">
+<style>
+  :root{ --bg:#0b1220; --card:#121c33; --line:#263556; --txt:#e8eefc; --muted:#8aa4c8; --accent:#a9c4f0; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:var(--bg); color:var(--txt); font-family:'Archivo',system-ui,sans-serif; -webkit-tap-highlight-color:transparent; overflow-x:hidden; max-width:100vw; }
+  body{ padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(140px + env(safe-area-inset-bottom,0px)); }
+  header{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+  header h1{ font-size:17px; margin:0; font-weight:800; line-height:1.2; }
+  header small{ display:block; color:var(--muted); font-weight:500; font-size:12px; margin-top:2px; }
+  header a{ color:var(--accent); font-size:13px; text-decoration:none; border:1px solid var(--line); padding:8px 10px; border-radius:10px; white-space:nowrap; }
+  #agora{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:12px; margin-bottom:14px; }
+  #agora .mini{ width:100%; aspect-ratio:16/9; overflow:hidden; border-radius:10px; background:#BBD0ED; position:relative; }
+  .mini{ isolation:isolate; z-index:0; }
+  .mini .slide{ position:absolute; left:0; top:0; transform-origin:0 0; pointer-events:none; }
+  #agora .n{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-weight:700; }
+  #agora .n small{ color:var(--muted); font-weight:500; }
+  #lista{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .th{ background:var(--card); border:2px solid var(--line); border-radius:14px; padding:6px; cursor:pointer; }
+  .th.on{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(169,196,240,.25); }
+  .th .mini{ width:100%; aspect-ratio:16/9; overflow:hidden; border-radius:8px; background:#BBD0ED; position:relative; }
+  .th{ min-width:0; }
+  .th .t{ font-size:12px; color:var(--muted); margin:6px 2px 2px; display:flex; justify-content:space-between; gap:6px; min-width:0; }
+  .th .t span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  .th .t b{ color:var(--txt); }
+  #barra{ position:fixed; left:0; right:0; bottom:0; z-index:50; padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px)); background:linear-gradient(transparent, var(--bg) 30%); display:flex; gap:12px; }
+  #barra button{ flex:1; height:78px; border:0; border-radius:20px; font:inherit; font-weight:800; font-size:20px; color:#0b1220; background:var(--accent); display:flex; align-items:center; justify-content:center; gap:8px; }
+  #barra button.ant{ background:var(--card); color:var(--txt); border:1px solid var(--line); flex:.6; }
+  #barra button:active{ transform:scale(.97); }
+  #aviso{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; color:var(--muted); line-height:1.4; }
+  #estado{ font-size:12px; color:var(--muted); text-align:center; margin-top:10px; }
+</style>
+</head>
+<body>
+<header><div><h1 id="titulo">Controle do telão</h1><small id="sub">Carregando...</small></div><a id="linkTelao" href="#" target="_blank">Abrir telão</a></header>
+<div id="aviso" hidden></div>
+<div id="agora" hidden><div class="mini" id="miniAgora"></div><div class="n"><span>Slide <b id="nAtual">–</b> de <b id="nTotal">–</b></span><small id="sincro">sincronizando...</small></div></div>
+<div id="lista"></div>
+<div id="estado"></div>
+<div id="barra" hidden><button class="ant" id="btAnt">‹ Anterior</button><button id="btProx">Próximo ›</button></div>
+<script>
+const $ = id => document.getElementById(id);
+const id = new URLSearchParams(location.search).get('id') || '';
+let apres = null, atual = 0, enviando = false;
+$('linkTelao').href = 'telao.html?id=' + encodeURIComponent(id);
+const miniHtml = (h, larg) => `<section class="slide" style="transform:scale(${(larg / 1920).toFixed(4)})">${h}</section>`;
+function pintar(){
+  const n = apres.slides.length; $('nAtual').textContent = atual + 1; $('nTotal').textContent = n;
+  const w = $('miniAgora').clientWidth || 340; $('miniAgora').innerHTML = miniHtml(apres.slides[atual], w);
+  document.querySelectorAll('.th').forEach((el, i) => el.classList.toggle('on', i === atual));
+  $('btAnt').disabled = atual <= 0; $('btProx').disabled = atual >= n - 1;
+}
+async function ir(n){
+  if (!apres) return; n = Math.max(0, Math.min(apres.slides.length - 1, n)); atual = n; pintar();
+  enviando = true; $('sincro').textContent = 'enviando...';
+  try { const r = await fetch('/api/telao', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ acao:'ir', id, slide:n }) }); $('sincro').textContent = r.ok ? 'telão atualizado' : 'falhou, tente de novo'; }
+  catch (e) { $('sincro').textContent = 'sem conexão'; }
+  enviando = false;
+}
+async function carregar(){
+  if (!id) { $('aviso').hidden = false; $('aviso').textContent = 'Falta o id da apresentação. Abra pelo botão "Controle" na lista de apresentações do Sistema PIBN.'; $('sub').textContent = ''; return; }
+  let r; try { r = await fetch('/api/telao?id=' + encodeURIComponent(id)); } catch (e) { $('sub').textContent = 'Sem conexão. Tentando de novo...'; setTimeout(carregar, 5000); return; }
+  if (!r.ok) { $('aviso').hidden = false; $('aviso').textContent = 'Apresentação não encontrada.'; $('sub').textContent = ''; return; }
+  const j = await r.json(); apres = j.apresentacao; atual = j.atual || 0;
+  $('titulo').textContent = apres.titulo; $('sub').textContent = (apres.data ? apres.data.split('-').reverse().join('/') + ' · ' : '') + apres.slides.length + ' slides';
+  if (apres.status !== 'pronta' || !apres.slides.length) { $('aviso').hidden = false; $('aviso').textContent = 'Essa apresentação ainda está sendo montada. Esta tela atualiza sozinha quando ficar pronta.'; setTimeout(carregar, 15000); return; }
+  $('aviso').hidden = true; $('agora').hidden = false; $('barra').hidden = false;
+  const w = Math.floor((document.body.clientWidth - 28 - 10) / 2) - 16;
+  $('lista').innerHTML = apres.slides.map((h, i) => `<div class="th" data-i="${i}"><div class="mini">${miniHtml(h, w)}</div><div class="t"><b>${i + 1}</b><span>${tituloDo(h)}</span></div></div>`).join('');
+  document.querySelectorAll('.th').forEach(el => el.onclick = () => ir(+el.dataset.i));
+  pintar(); sincronizar();
+}
+function tituloDo(h){ const d = document.createElement('div'); d.innerHTML = h; d.querySelectorAll('br').forEach(b => b.replaceWith(' ')); const t = d.querySelector('.forte') || d.querySelector('.cab, h1, h2'); return (t ? t.textContent : '').replace(/\s+/g, ' ').trim(); }
+async function sincronizar(){                 // se alguém trocou pelo teclado do computador, o celular acompanha
+  if (!enviando) { try { const r = await fetch('/api/telao?id=' + encodeURIComponent(id) + '&atual=1'); if (r.ok) { const j = await r.json(); if (typeof j.atual === 'number' && j.atual !== atual) { atual = j.atual; pintar(); } $('sincro').textContent = 'em sincronia com o telão'; } } catch (e) { $('sincro').textContent = 'sem conexão'; } }
+  setTimeout(sincronizar, 2000);
+}
+$('btAnt').onclick = () => ir(atual - 1); $('btProx').onclick = () => ir(atual + 1);
+addEventListener('resize', () => apres && pintar());
+carregar();
+</script>
+</body>
+</html>

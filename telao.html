@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Telão · Sistema PIBN</title>
+<!-- Página do computador ligado ao projetor: abre a apresentação (?id=...) em tela cheia e troca de slide quando o celular manda (consulta o servidor a cada segundo). Setas do teclado também funcionam. 25/10/2026. -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@125,300;125,500;125,700;125,800;125,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="slides.css">
+<style>
+  html,body{ margin:0; height:100%; background:#000; overflow:hidden; font-family:'Archivo',system-ui,sans-serif; color:#fff; }
+  #palco{ position:fixed; left:50%; top:50%; width:1920px; height:1080px; transform-origin:center center; }
+  #palco .slide{ position:absolute; inset:0; opacity:0; transition:opacity .35s; }
+  #palco .slide.on{ opacity:1; }
+  #aviso{ position:fixed; inset:0; display:grid; place-items:center; text-align:center; padding:40px; font-size:clamp(18px,3vw,34px); color:#BBD0ED; background:#0b1220; }
+  #aviso small{ display:block; margin-top:14px; font-size:.55em; color:#8aa4c8; }
+  #hud{ position:fixed; right:16px; bottom:12px; font-size:14px; color:rgba(255,255,255,.55); background:rgba(0,0,0,.45); padding:6px 10px; border-radius:8px; opacity:0; transition:opacity .3s; }
+  body.mexeu #hud{ opacity:1; }
+  #hud b{ color:#fff; }
+</style>
+</head>
+<body>
+<div id="aviso">Carregando a apresentação...</div>
+<div id="palco" hidden></div>
+<div id="hud"><b id="hudN">–</b> · setas pra trocar · F = tela cheia · <span id="hudT"></span></div>
+<script>
+const $ = id => document.getElementById(id);
+const id = new URLSearchParams(location.search).get('id') || '';
+let apres = null, atual = -1, slides = [];
+function ajustar(){ const s = Math.min(innerWidth / 1920, innerHeight / 1080); $('palco').style.transform = `translate(-50%,-50%) scale(${s})`; }
+addEventListener('resize', ajustar);
+function mostrar(n){
+  if (!slides.length) return; n = Math.max(0, Math.min(slides.length - 1, n)); if (n === atual) return;
+  atual = n; slides.forEach((el, i) => el.classList.toggle('on', i === n)); $('hudN').textContent = (n + 1) + ' / ' + slides.length;
+}
+async function ir(n){
+  mostrar(n);                                                   // troca na hora; o servidor só guarda pra sincronizar com o celular
+  try { await fetch('/api/telao', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ acao:'ir', id, slide:n }) }); } catch (e) {}
+}
+async function carregar(){
+  if (!id) { $('aviso').innerHTML = 'Falta o id da apresentação.<small>Abra pelo botão "Telão" na lista de apresentações do Sistema PIBN.</small>'; return; }
+  let r; try { r = await fetch('/api/telao?id=' + encodeURIComponent(id)); } catch (e) { $('aviso').innerHTML = 'Sem conexão.<small>Tentando de novo em 5 segundos...</small>'; setTimeout(carregar, 5000); return; }
+  if (!r.ok) { $('aviso').innerHTML = 'Apresentação não encontrada.<small>Confira o link na lista de apresentações.</small>'; return; }
+  const j = await r.json(); apres = j.apresentacao; document.title = apres.titulo + ' · Telão';
+  if (apres.status !== 'pronta' || !apres.slides.length) { $('aviso').innerHTML = `"${apres.titulo}" ainda está sendo montada.<small>Quando ficar pronta, esta tela atualiza sozinha.</small>`; setTimeout(carregar, 15000); return; }
+  $('palco').innerHTML = apres.slides.map(h => `<section class="slide">${h}</section>`).join('');
+  slides = [...document.querySelectorAll('#palco .slide')];
+  $('aviso').hidden = true; $('palco').hidden = false; $('hudT').textContent = apres.titulo; ajustar(); mostrar(j.atual || 0); sincronizar();
+}
+async function sincronizar(){                                   // segue o celular: pergunta o slide atual a cada segundo
+  try { const r = await fetch('/api/telao?id=' + encodeURIComponent(id) + '&atual=1'); if (r.ok) { const j = await r.json(); if (typeof j.atual === 'number') mostrar(j.atual); } } catch (e) {}
+  setTimeout(sincronizar, 1000);
+}
+document.addEventListener('keydown', e => {
+  if (['ArrowRight','PageDown',' ','Enter'].includes(e.key)) { e.preventDefault(); ir(atual + 1); }
+  if (['ArrowLeft','PageUp','Backspace'].includes(e.key)) { e.preventDefault(); ir(atual - 1); }
+  if (e.key === 'Home') ir(0); if (e.key === 'End') ir(slides.length - 1);
+  if (e.key.toLowerCase() === 'f') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); }
+});
+document.addEventListener('click', e => { if (e.clientX > innerWidth / 2) ir(atual + 1); else ir(atual - 1); });
+let t; document.addEventListener('mousemove', () => { document.body.classList.add('mexeu'); clearTimeout(t); t = setTimeout(() => document.body.classList.remove('mexeu'), 2500); });
+carregar();
+</script>
+</body>
+</html>
