@@ -768,13 +768,13 @@ async function renderAssembleia(){
   }).join('');
 }
 function novaApresentacao(){
-  navegar('assembleia');
+  navegar('assembleia'); apImagens = [];
   const ov = document.createElement('div'); ov.className = 'overlay open'; ov.id = 'ovApres';
   const hoje = new Date().toISOString().slice(0,10);
   ov.innerHTML = `<div class="modal"><h2>Nova apresentação</h2>
     <div class="field"><label>Nome</label><input id="apTitulo" type="text" placeholder="Ex.: Assembleia 25/10/2026 · Movimentação de membros"></div>
     <div class="field"><label>Data</label><input id="apData" type="date" value="${hoje}"></div>
-    <div class="field"><label>Arquivos com o conteúdo (PDF, Word .docx, .txt ou .md). Pode escolher vários de uma vez: cada arquivo vira uma parte do relatório.</label><input id="apArquivo" type="file" multiple accept=".pdf,.docx,.txt,.md,text/plain,application/pdf"><div class="when" id="apLista"></div></div>
+    <div class="field"><label>Arquivos. <b>Texto</b> (PDF, Word, .txt, .md): o robô monta os slides no padrão; vários arquivos viram partes de um relatório. <b>Imagens</b> (JPG/PNG dos slides, ex.: exportados do PowerPoint): cada imagem vira um slide, pronta na hora.</label><input id="apArquivo" type="file" multiple accept=".pdf,.docx,.txt,.md,.jpg,.jpeg,.png,.webp,text/plain,application/pdf,image/*"><div class="when" id="apLista"></div></div>
     <div class="field"><label>Ou cole o texto aqui</label><textarea id="apTexto" rows="8" placeholder="Os tópicos destacados do documento viram os slides."></textarea></div>
     <div class="when" id="apStatus"></div>
     <div class="modal-actions"><button class="btn ghost" onclick="document.getElementById('ovApres').remove()">Cancelar</button><button class="btn" id="apEnviar" onclick="pedirApresentacao()">Enviar pra montagem</button></div>
@@ -788,7 +788,10 @@ function novaApresentacao(){
   md.addEventListener('drop', e => { e.preventDefault(); md.style.outline = ''; lerArquivosApres([...e.dataTransfer.files]); });
 }
 // lê vários arquivos de uma vez; cada um vira uma parte do texto, com o nome do arquivo como título da parte
+let apImagens = [];                                   // slides prontos (data URL) quando o envio é de imagens
 async function lerArquivosApres(arqs){
+  const imgs = arqs.filter(a => /\.(jpe?g|png|webp)$/i.test(a.name) || a.type.startsWith('image/'));
+  if (imgs.length) return lerImagensApres(imgs);
   arqs = arqs.filter(a => /\.(pdf|docx|txt|md)$/i.test(a.name)); if (!arqs.length) return;
   const st = document.getElementById('apStatus'), lista = document.getElementById('apLista'), area = document.getElementById('apTexto');
   const partes = []; const linhas = [];
@@ -801,6 +804,44 @@ async function lerArquivosApres(arqs){
   lista.innerHTML = linhas.map(esc).join('<br>');
   st.textContent = partes.length ? `${partes.length} arquivo(s) lido(s), ${area.value.length} caracteres no total. Confira e envie.` : 'Nenhum texto lido.';
   if (!document.getElementById('apTitulo').value && arqs.length === 1) document.getElementById('apTitulo').value = arqs[0].name.replace(/\.[^.]+$/, '');
+}
+// imagens dos slides: ordena pelo nome (Slide1, Slide2... Slide10), reduz pra 1920x1080 e guarda como JPG
+async function lerImagensApres(imgs){
+  const st = document.getElementById('apStatus'), lista = document.getElementById('apLista');
+  imgs.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true }));
+  apImagens = [];
+  for (let i = 0; i < imgs.length; i++) {
+    st.textContent = `Preparando imagem ${i + 1} de ${imgs.length}: ${imgs[i].name}...`;
+    try { apImagens.push(await imagemParaSlide(imgs[i])); } catch (e) { lista.innerHTML += esc('✗ ' + imgs[i].name + ': ' + (e.message || e)) + '<br>'; }
+  }
+  const kb = Math.round(apImagens.reduce((t, s) => t + s.length * 0.75, 0) / 1024);
+  lista.innerHTML = imgs.map((f, i) => esc(`${i + 1}. ${f.name}`)).join('<br>');
+  st.textContent = apImagens.length ? `${apImagens.length} imagem(ns) prontas (${kb} KB). Cada uma vira um slide, na ordem acima. Dê o nome e envie.` : 'Nenhuma imagem lida.';
+  const t = document.getElementById('apTexto'); t.value = ''; t.placeholder = 'Envio de imagens: não precisa de texto.';
+  document.getElementById('apEnviar').textContent = 'Publicar slides';
+}
+function imagemParaSlide(f){
+  return new Promise((ok, erro) => {
+    const img = new Image(); const url = URL.createObjectURL(f);
+    img.onload = () => { const c = document.createElement('canvas'); c.width = 1920; c.height = 1080; const x = c.getContext('2d');
+      x.fillStyle = '#0b1220'; x.fillRect(0, 0, 1920, 1080); const s = Math.min(1920 / img.width, 1080 / img.height); const w = Math.round(img.width * s), h = Math.round(img.height * s);
+      x.drawImage(img, Math.round((1920 - w) / 2), Math.round((1080 - h) / 2), w, h); URL.revokeObjectURL(url);
+      let q = 0.85, d = c.toDataURL('image/jpeg', q); while (d.length > 420000 && q > 0.5) { q -= 0.1; d = c.toDataURL('image/jpeg', q); }
+      ok(`<div class="img-slide"><img src="${d}" alt=""></div>`); };
+    img.onerror = () => erro(new Error('não abriu a imagem')); img.src = url;
+  });
+}
+async function publicarImagens(titulo, data){
+  const st = document.getElementById('apStatus'); const cab = Object.assign({ 'Content-Type':'application/json' }, authHeaders());
+  const LOTE = 5;                                                  // ~5 imagens por envio (limite de 4,5 MB por chamada na Vercel)
+  let r = await fetch('/api/telao', { method:'POST', headers: cab, body: JSON.stringify({ acao:'salvar', apresentacao: { titulo, data, tipo:'imagens', slides: apImagens.slice(0, LOTE) } }) });
+  if (!r.ok) throw new Error('servidor respondeu ' + r.status); const id = (await r.json()).id;
+  for (let i = LOTE; i < apImagens.length; i += LOTE) {
+    st.textContent = `Enviando slides ${i + 1} a ${Math.min(i + LOTE, apImagens.length)} de ${apImagens.length}...`;
+    r = await fetch('/api/telao', { method:'POST', headers: cab, body: JSON.stringify({ acao:'anexar', id, slides: apImagens.slice(i, i + LOTE) }) });
+    if (!r.ok) throw new Error('falhou no lote ' + (i / LOTE + 1) + ' (' + r.status + ')');
+  }
+  return id;
 }
 function carregarScript(src){ return new Promise((ok, erro) => { if (document.querySelector(`script[src="${src}"]`)) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => erro(new Error('falha ao carregar ' + src)); document.head.appendChild(s); }); }
 async function lerTextoDoArquivo(f){
@@ -823,7 +864,14 @@ async function lerTextoDoArquivo(f){
 }
 async function pedirApresentacao(){
   const titulo = document.getElementById('apTitulo').value.trim(), data = document.getElementById('apData').value, texto = document.getElementById('apTexto').value;
-  const st = document.getElementById('apStatus'); if (!titulo) { st.textContent = 'Dê um nome.'; return; } if (!texto.trim()) { st.textContent = 'Falta o texto (arquivo ou colado).'; return; }
+  const st = document.getElementById('apStatus'); if (!titulo) { st.textContent = 'Dê um nome.'; return; }
+  if (apImagens.length) {
+    document.getElementById('apEnviar').disabled = true; st.textContent = 'Enviando...';
+    try { await publicarImagens(titulo, data); apImagens = []; document.getElementById('ovApres').remove(); renderAssembleia(); }
+    catch (e) { st.textContent = 'Não deu: ' + (e.message || e); document.getElementById('apEnviar').disabled = false; }
+    return;
+  }
+  if (!texto.trim()) { st.textContent = 'Falta o texto (arquivo ou colado).'; return; }
   const fs = [...document.getElementById('apArquivo').files]; document.getElementById('apEnviar').disabled = true; st.textContent = 'Enviando...';
   try {
     const r = await fetch('/api/telao', { method:'POST', headers: Object.assign({ 'Content-Type':'application/json' }, authHeaders()), body: JSON.stringify({ acao:'pedir', titulo, data, texto, arquivo: fs.map(f => f.name).join(', ') }) });

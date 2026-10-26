@@ -48,3 +48,6 @@
 .slide .resumo{ position:absolute; left:120px; right:120px; top:790px; display:flex; gap:28px; color:#1F3A5F; font-weight:700; font-size:30px; text-transform:uppercase; letter-spacing:1px; }
 .slide .resumo span{ background:rgba(255,255,255,.45); border-radius:16px; padding:16px 26px; }
 .slide .resumo span b{ font-weight:900; font-size:40px; margin-right:8px; }
+/* slide feito de imagem (JPG/PNG exportado do PowerPoint): a imagem ocupa o quadro inteiro */
+.slide .img-slide{ position:absolute; inset:0; background:#0b1220; }
+.slide .img-slide img{ width:100%; height:100%; object-fit:contain; display:block; }
