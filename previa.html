@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Prévia · Sistema PIBN</title>
+<!-- Prévia de uma apresentação (?id=...): todos os slides um embaixo do outro, no tamanho da tela, só pra conferir. Não controla o telão. 26/10/2026. -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@125,300;125,500;125,700;125,800;125,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="slides.css">
+<style>
+  :root{ --bg:#0b1220; --card:#121c33; --line:#263556; --txt:#e8eefc; --muted:#8aa4c8; --accent:#a9c4f0; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:var(--bg); color:var(--txt); font-family:'Archivo',system-ui,sans-serif; overflow-x:hidden; }
+  body{ padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(24px + env(safe-area-inset-bottom,0px)); }
+  header{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 auto 14px; max-width:1200px; }
+  header h1{ font-size:17px; margin:0; font-weight:800; line-height:1.2; }
+  header small{ display:block; color:var(--muted); font-weight:500; font-size:12px; margin-top:2px; }
+  header nav{ display:flex; gap:8px; }
+  header a{ color:var(--accent); font-size:13px; text-decoration:none; border:1px solid var(--line); padding:8px 10px; border-radius:10px; white-space:nowrap; }
+  #lista{ display:flex; flex-direction:column; gap:18px; max-width:1200px; margin:0 auto; }
+  .bloco .n{ font-size:13px; color:var(--muted); margin:0 2px 6px; display:flex; justify-content:space-between; }
+  .bloco .mini{ width:100%; aspect-ratio:16/9; overflow:hidden; border-radius:12px; background:#BBD0ED; position:relative; border:1px solid var(--line); }
+  .mini .slide{ position:absolute; left:0; top:0; transform-origin:0 0; pointer-events:none; }
+  #aviso{ max-width:1200px; margin:0 auto; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; color:var(--muted); line-height:1.4; }
+</style>
+</head>
+<body>
+<header><div><h1 id="titulo">Prévia</h1><small id="sub">Carregando...</small></div><nav><a id="lkCtl" href="#">Controle</a><a id="lkTel" href="#" target="_blank">Telão</a></nav></header>
+<div id="aviso" hidden></div>
+<div id="lista"></div>
+<script>
+const $ = id => document.getElementById(id);
+const id = new URLSearchParams(location.search).get('id') || '';
+$('lkCtl').href = 'controle.html?id=' + encodeURIComponent(id); $('lkTel').href = 'telao.html?id=' + encodeURIComponent(id);
+let apres = null;
+function pintar(){
+  const w = Math.min(1200, document.body.clientWidth - 24);
+  $('lista').innerHTML = apres.slides.map((h, i) => `<div class="bloco"><div class="n"><b>Slide ${i + 1}</b><span>${i + 1} de ${apres.slides.length}</span></div><div class="mini"><section class="slide${h.includes('capa-marca') ? ' capa' : ''}" style="transform:scale(${(w / 1920).toFixed(4)})">${h}</section></div></div>`).join('');
+}
+async function carregar(){
+  if (!id) { $('aviso').hidden = false; $('aviso').textContent = 'Falta o id da apresentação. Abra pelo botão "Prévia" na lista de apresentações do Sistema PIBN.'; $('sub').textContent = ''; return; }
+  let r; try { r = await fetch('/api/telao?id=' + encodeURIComponent(id)); } catch (e) { $('sub').textContent = 'Sem conexão. Tentando de novo...'; setTimeout(carregar, 5000); return; }
+  if (!r.ok) { $('aviso').hidden = false; $('aviso').textContent = 'Apresentação não encontrada.'; $('sub').textContent = ''; return; }
+  apres = (await r.json()).apresentacao; $('titulo').textContent = apres.titulo;
+  $('sub').textContent = (apres.data ? apres.data.split('-').reverse().join('/') + ' · ' : '') + (apres.status === 'pronta' ? apres.slides.length + ' slides' : 'aguardando montagem');
+  if (apres.status !== 'pronta' || !apres.slides.length) { $('aviso').hidden = false; $('aviso').textContent = 'Essa apresentação ainda está sendo montada. Esta tela atualiza sozinha quando ficar pronta.'; setTimeout(carregar, 15000); return; }
+  $('aviso').hidden = true; pintar();
+}
+addEventListener('resize', () => apres && apres.slides.length && pintar());
+carregar();
+</script>
+</body>
+</html>
