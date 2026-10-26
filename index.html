@@ -763,6 +763,7 @@ async function renderAssembleia(){
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
         ${a.aviso ? `<div class="when" style="width:100%">${esc(a.aviso)}</div>` : ''}
         ${pronta ? `<a class="btn" href="previa.html?id=${a.id}" target="_blank">Prévia</a><a class="btn" href="telao.html?id=${a.id}" target="_blank">Telão</a><a class="btn" href="controle.html?id=${a.id}" target="_blank">Controle</a>` : `<span class="when">O computador do Arthur monta os slides a partir do texto (a cada 10 min, com o PC ligado). Quando ficar pronta, os botões Prévia, Telão e Controle aparecem aqui.</span>`}
+        ${pronta && a.tipo === 'imagens' ? `<button class="btn ghost" onclick="converterApresentacao('${a.id}')">Montar no padrão PIBN</button>` : ''}
         <button class="btn ghost" onclick="apagarApresentacao('${a.id}', '${esc(a.titulo).replace(/'/g, "\\'")}')">Apagar</button>
       </div></div>`;
   }).join('');
@@ -883,8 +884,14 @@ async function pedirApresentacao(lerTexto){
     document.getElementById('ovApres').remove(); renderAssembleia();
   } catch (e) { st.textContent = 'Não deu: ' + (e.message || e); document.getElementById('apEnviar').disabled = false; }
 }
+async function converterApresentacao(id){
+  // cria a cópia "· padrão PIBN" (a original com as imagens continua); o robô do computador lê o texto e monta
+  const r = await fetch('/api/telao', { method:'POST', headers: Object.assign({ 'Content-Type':'application/json' }, authHeaders()), body: JSON.stringify({ acao:'converter', id }) });
+  if (!r.ok) { alert('Não deu pra criar a cópia (' + r.status + ').'); return; }
+  renderAssembleia();
+}
 async function apagarApresentacao(id, titulo){
-  if (!confirm('Apagar a apresentação "' + titulo + '"?')) return;
+  if (!confirm('Apagar a apresentação "' + titulo + '"? (fica 7 dias na lixeira; o Arthur consegue trazer de volta)')) return;
   await fetch('/api/telao', { method:'POST', headers: Object.assign({ 'Content-Type':'application/json' }, authHeaders()), body: JSON.stringify({ acao:'apagar', id }) });
   renderAssembleia();
 }

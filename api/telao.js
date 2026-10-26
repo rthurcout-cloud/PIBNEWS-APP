@@ -12,10 +12,12 @@
 //   POST { acao:'salvar', apresentacao } -> grava/atualiza uma apresentação pronta (slides em HTML) — usado pelo robô e pela importação
 //   POST { acao:'anexar', id, slides }      -> acrescenta slides (envio em lotes)
 //   POST { acao:'status', id, status, aviso } -> robô marca montando/erro
-//   POST { acao:'apagar', id }
+//   POST { acao:'converter', id }        -> cópia de uma apresentação de imagens pro robô montar no padrão
+//   POST { acao:'apagar', id }            -> vai pra lixeira por 7 dias; { acao:'restaurar', id } traz de volta
+//   GET  /api/telao?reconstruir=1        -> refaz a lista varrendo as chaves
 const { KV_URL, KV_TOKEN, kv, acessoOk, lerCorpo } = require('./_util');
 
-const K = { lista: 'controle-gravacoes:telao:lista', apres: 'controle-gravacoes:telao:apres:', atual: 'controle-gravacoes:telao:atual:', slide: 'controle-gravacoes:telao:slide:' };
+const K = { lista: 'controle-gravacoes:telao:lista', apres: 'controle-gravacoes:telao:apres:', atual: 'controle-gravacoes:telao:atual:', slide: 'controle-gravacoes:telao:slide:', lixo: 'controle-gravacoes:telao:lixeira:' };
 const novoId = () => 'ap' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const limpar = s => String(s || '').replace(/[<>]/g, '').trim().slice(0, 200);
 
@@ -49,6 +51,11 @@ module.exports = async (req, res) => {
   try {
     if (req.method === 'GET') {
       const q = req.query || {};
+      if (q.reconstruir) {                                       // refaz a lista varrendo as chaves das apresentações
+        const sc = await kv(['KEYS', K.apres + '*']); const ids = (sc && sc.result ? sc.result : []).map(k => k.slice(K.apres.length));
+        const l = []; for (const id of ids) { const a = await lerApres(id); if (a) l.push(resumo(a)); }
+        l.sort((x, y) => (y.criado || '').localeCompare(x.criado || '')); await gravarLista(l); res.status(200).json({ lista: l, reconstruida: true }); return;
+      }
       if (q.lista) { res.status(200).json({ lista: await lerLista() }); return; }
       const id = limpar(q.id); if (!id) { res.status(400).json({ error: 'sem_id' }); return; }
       if (q.atual) { res.status(200).json({ atual: await lerAtual(id) }); return; }
@@ -83,6 +90,11 @@ module.exports = async (req, res) => {
       await gravarApres(a); if (!antes) await kv(['SET', K.atual + id, '0']); await atualizarLista(a);
       res.status(200).json({ ok: true, id }); return;
     }
+    if (b.acao === 'converter') {                               // apresentação de imagens -> cópia "· padrão PIBN" que o robô lê e monta
+      const id = limpar(b.id); const a = await lerApres(id); if (!a || !a.slides.length) { res.status(404).json({ error: 'nao_encontrada' }); return; }
+      const c = { id: novoId(), titulo: (a.titulo + ' · padrão PIBN').slice(0, 200), data: a.data || '', status: 'aguardando', tipo: 'ler-imagens', slides: a.slides, texto: '', arquivo: a.arquivo || '', origem: id, criado: new Date().toISOString() };
+      await gravarApres(c); await kv(['SET', K.atual + c.id, '0']); await atualizarLista(c); res.status(200).json({ ok: true, id: c.id }); return;
+    }
     if (b.acao === 'anexar') {                                  // acrescenta slides a uma apresentação (envio em lotes, ex.: imagens)
       const id = limpar(b.id); const a = await lerApres(id); if (!a || !Array.isArray(b.slides)) { res.status(404).json({ error: 'nao_encontrada' }); return; }
       const novos = b.slides.map(s => String(s).slice(0, 450000)); const base = a.slides.length;
@@ -99,8 +111,15 @@ module.exports = async (req, res) => {
       await gravarApres(a); await atualizarLista(a); res.status(200).json({ ok: true }); return;
     }
     if (b.acao === 'apagar') {
-      const id = limpar(b.id); const a = await lerApres(id); if (a) await apagarSlides(id, a.nSlides); await kv(['DEL', K.apres + id]); await kv(['DEL', K.atual + id]);
-      await gravarLista((await lerLista()).filter(x => x.id !== id)); res.status(200).json({ ok: true }); return;
+      const id = limpar(b.id); const a = await lerApres(id);
+      if (a) { a.apagadaEm = new Date().toISOString(); await kv(['SET', K.lixo + id, JSON.stringify(a), 'EX', String(7 * 24 * 3600)]); await apagarSlides(id, a.nSlides); }   // lixeira: 7 dias
+      await kv(['DEL', K.apres + id]); await kv(['DEL', K.atual + id]);
+      await gravarLista((await lerLista()).filter(x => x.id !== id)); res.status(200).json({ ok: true, lixeira: !!a }); return;
+    }
+    if (b.acao === 'restaurar') {
+      const id = limpar(b.id); const r = await kv(['GET', K.lixo + id]); if (!r || !r.result) { res.status(404).json({ error: 'nao_esta_na_lixeira' }); return; }
+      const a = JSON.parse(r.result); delete a.apagadaEm; await gravarApres(a); await kv(['SET', K.atual + id, '0']); await atualizarLista(a); await kv(['DEL', K.lixo + id]);
+      res.status(200).json({ ok: true, id }); return;
     }
     res.status(400).json({ error: 'acao_desconhecida' });
   } catch (e) {
