@@ -61,6 +61,12 @@
 .slide .tabela.minima{ top:420px; }
 .slide .tabela.minima .lin{ font-size:27px; padding:3px 0; }
 .slide .tabela .obs{ margin-top:14px; font-size:24px; color:#2F4E78; font-weight:500; }
+/* célula "número + palavra": a palavra vai pra baixo, na mesma coluna */
+.slide .tabela .lin span small{ display:block; font-size:.66em; font-weight:500; color:#2F4E78; line-height:1.1; }
+/* tabela com gráfico pequeno ao lado (versão B): tabela ocupa a esquerda, gráfico à direita */
+.slide .tabela.com-grafico{ right:auto; width:1000px; }
+.slide .grafico{ position:absolute; left:1180px; right:120px; top:440px; height:500px; }
+.slide .grafico svg{ width:100%; height:100%; display:block; }
 /* slide feito de imagem (JPG/PNG exportado do PowerPoint): a imagem ocupa o quadro inteiro */
 .slide .img-slide{ position:absolute; inset:0; background:#0b1220; }
 .slide .img-slide img{ width:100%; height:100%; object-fit:contain; display:block; }
