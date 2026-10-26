@@ -757,11 +757,12 @@ async function renderAssembleia(){
   if (!apresLista.length) { el.innerHTML = '<div class="card"><div class="title">Nenhuma apresentação ainda</div><div class="when">Toque em "Nova apresentação", dê o nome e solte o arquivo de texto (PDF, Word ou .txt). A montagem segue o padrão da assembleia.</div></div>'; return; }
   el.innerHTML = apresLista.map(a => {
     const pronta = a.status === 'pronta';
-    const st = pronta ? `<span class="badge gravada">pronta · ${a.n} slides</span>` : `<span class="badge agendada">aguardando montagem</span>`;
+    const st = pronta ? `<span class="badge gravada">pronta · ${a.n} slides</span>` : a.status === 'montando' ? `<span class="badge agendada">montando agora...</span>` : a.status === 'erro' ? `<span class="badge cancelada">deu erro</span>` : `<span class="badge agendada">aguardando montagem</span>`;
     const dt = a.data ? a.data.split('-').reverse().join('/') : '';
     return `<div class="card"><div class="title">${esc(a.titulo)} ${st}</div><div class="when">${dt ? dt + ' · ' : ''}criada em ${dmy((a.criado||'').slice(0,10))}${a.montado ? ' · montada em ' + dmy(a.montado.slice(0,10)) : ''}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        ${pronta ? `<a class="btn" href="previa.html?id=${a.id}" target="_blank">Prévia</a><a class="btn" href="telao.html?id=${a.id}" target="_blank">Telão</a><a class="btn" href="controle.html?id=${a.id}" target="_blank">Controle</a>` : `<span class="when">O robô monta os slides a partir do texto enviado; quando ficar pronta, os botões Prévia, Telão e Controle aparecem aqui.</span>`}
+        ${a.aviso ? `<div class="when" style="width:100%">${esc(a.aviso)}</div>` : ''}
+        ${pronta ? `<a class="btn" href="previa.html?id=${a.id}" target="_blank">Prévia</a><a class="btn" href="telao.html?id=${a.id}" target="_blank">Telão</a><a class="btn" href="controle.html?id=${a.id}" target="_blank">Controle</a>` : `<span class="when">O computador do Arthur monta os slides a partir do texto (a cada 10 min, com o PC ligado). Quando ficar pronta, os botões Prévia, Telão e Controle aparecem aqui.</span>`}
         <button class="btn ghost" onclick="apagarApresentacao('${a.id}', '${esc(a.titulo).replace(/'/g, "\\'")}')">Apagar</button>
       </div></div>`;
   }).join('');

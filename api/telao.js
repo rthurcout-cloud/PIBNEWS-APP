@@ -10,6 +10,7 @@
 //   POST { acao:'ir', id, slide }        -> muda o slide atual   (controle no celular)
 //   POST { acao:'pedir', titulo, data, texto, arquivo } -> cria apresentação "aguardando montagem" com o texto enviado
 //   POST { acao:'salvar', apresentacao } -> grava/atualiza uma apresentação pronta (slides em HTML) — usado pelo robô e pela importação
+//   POST { acao:'status', id, status, aviso } -> robô marca montando/erro
 //   POST { acao:'apagar', id }
 const { KV_URL, KV_TOKEN, kv, acessoOk, lerCorpo } = require('./_util');
 
@@ -21,7 +22,7 @@ async function lerLista() { const r = await kv(['GET', K.lista]); return r && r.
 async function gravarLista(l) { await kv(['SET', K.lista, JSON.stringify(l)]); }
 async function lerApres(id) { const r = await kv(['GET', K.apres + id]); return r && r.result ? JSON.parse(r.result) : null; }
 async function lerAtual(id) { const r = await kv(['GET', K.atual + id]); return r && r.result != null ? Number(r.result) || 0 : 0; }
-function resumo(a) { return { id: a.id, titulo: a.titulo, data: a.data || '', status: a.status, n: (a.slides || []).length, criado: a.criado, montado: a.montado || '' }; }
+function resumo(a) { return { id: a.id, titulo: a.titulo, data: a.data || '', status: a.status, n: (a.slides || []).length, criado: a.criado, montado: a.montado || '', aviso: a.aviso || '' }; }
 async function atualizarLista(a) {
   const l = (await lerLista()).filter(x => x.id !== a.id); l.unshift(resumo(a)); await gravarLista(l.slice(0, 200));
 }
@@ -63,6 +64,12 @@ module.exports = async (req, res) => {
       if (antes && antes.texto && !a.texto) a.texto = antes.texto;
       await kv(['SET', K.apres + id, JSON.stringify(a)]); if (!antes) await kv(['SET', K.atual + id, '0']); await atualizarLista(a);
       res.status(200).json({ ok: true, id }); return;
+    }
+    if (b.acao === 'status') {                                  // robô marca "montando" / "erro" (com aviso) sem mexer nos slides
+      const id = limpar(b.id); const a = await lerApres(id); if (!a) { res.status(404).json({ error: 'nao_encontrada' }); return; }
+      const st = ['aguardando', 'montando', 'erro'].includes(b.status) ? b.status : a.status;
+      a.status = st; a.aviso = String(b.aviso || '').slice(0, 500); a.tentativa = new Date().toISOString();
+      await kv(['SET', K.apres + id, JSON.stringify(a)]); await atualizarLista(a); res.status(200).json({ ok: true }); return;
     }
     if (b.acao === 'apagar') {
       const id = limpar(b.id); await kv(['DEL', K.apres + id]); await kv(['DEL', K.atual + id]);
