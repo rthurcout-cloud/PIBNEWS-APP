@@ -8,7 +8,7 @@
 //   GET  /api/telao?id=X                 -> { apresentacao, atual }
 //   GET  /api/telao?id=X&atual=1         -> { atual }            (o telão consulta a cada segundo)
 //   POST { acao:'ir', id, slide }        -> muda o slide atual   (controle no celular)
-//   POST { acao:'pedir', titulo, data, texto, arquivo } -> cria apresentação "aguardando montagem" com o texto enviado
+//   POST { acao:'pedir', titulo, data, texto, arquivo, slides? } -> cria apresentação "aguardando montagem" (texto, ou imagens pro robô ler: tipo 'ler-imagens')
 //   POST { acao:'salvar', apresentacao } -> grava/atualiza uma apresentação pronta (slides em HTML) — usado pelo robô e pela importação
 //   POST { acao:'anexar', id, slides }      -> acrescenta slides (envio em lotes)
 //   POST { acao:'status', id, status, aviso } -> robô marca montando/erro
@@ -66,8 +66,10 @@ module.exports = async (req, res) => {
     if (b.acao === 'pedir') {
       const titulo = limpar(b.titulo); if (!titulo) { res.status(400).json({ error: 'sem_titulo' }); return; }
       const texto = String(b.texto || '').slice(0, 900000);           // texto extraído dos arquivos (até ~900 KB; o KV aceita 1 MB por chave)
-      if (!texto.trim()) { res.status(400).json({ error: 'sem_texto' }); return; }
-      const a = { id: novoId(), titulo, data: limpar(b.data), status: 'aguardando', slides: [], texto, arquivo: limpar(b.arquivo), criado: new Date().toISOString() };
+      const imgs = Array.isArray(b.slides) ? b.slides.map(s => String(s).slice(0, 450000)).slice(0, 120) : [];
+      if (!texto.trim() && !imgs.length) { res.status(400).json({ error: 'sem_texto' }); return; }
+      // tipo 'ler-imagens': o robô lê o texto das imagens e monta no padrão; até lá as imagens ficam guardadas como slides provisórios
+      const a = { id: novoId(), titulo, data: limpar(b.data), status: 'aguardando', tipo: imgs.length ? 'ler-imagens' : 'texto', slides: imgs, texto, arquivo: limpar(b.arquivo), criado: new Date().toISOString() };
       await gravarApres(a); await kv(['SET', K.atual + a.id, '0']); await atualizarLista(a);
       res.status(200).json({ ok: true, id: a.id }); return;
     }

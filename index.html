@@ -757,7 +757,7 @@ async function renderAssembleia(){
   if (!apresLista.length) { el.innerHTML = '<div class="card"><div class="title">Nenhuma apresentação ainda</div><div class="when">Toque em "Nova apresentação", dê o nome e solte o arquivo de texto (PDF, Word ou .txt). A montagem segue o padrão da assembleia.</div></div>'; return; }
   el.innerHTML = apresLista.map(a => {
     const pronta = a.status === 'pronta';
-    const st = pronta ? `<span class="badge gravada">pronta · ${a.n} slides</span>` : a.status === 'montando' ? `<span class="badge agendada">montando agora...</span>` : a.status === 'erro' ? `<span class="badge cancelada">deu erro</span>` : `<span class="badge agendada">aguardando montagem</span>`;
+    const st = pronta ? `<span class="badge gravada">pronta · ${a.n} slides</span>` : a.status === 'montando' ? `<span class="badge agendada">montando agora...</span>` : a.tipo === 'ler-imagens' ? `<span class="badge agendada">aguardando: robô vai ler as imagens</span>` : a.status === 'erro' ? `<span class="badge cancelada">deu erro</span>` : `<span class="badge agendada">aguardando montagem</span>`;
     const dt = a.data ? a.data.split('-').reverse().join('/') : '';
     return `<div class="card"><div class="title">${esc(a.titulo)} ${st}</div><div class="when">${dt ? dt + ' · ' : ''}criada em ${dmy((a.criado||'').slice(0,10))}${a.montado ? ' · montada em ' + dmy(a.montado.slice(0,10)) : ''}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
@@ -818,7 +818,8 @@ async function lerImagensApres(imgs){
   lista.innerHTML = imgs.map((f, i) => esc(`${i + 1}. ${f.name}`)).join('<br>');
   st.textContent = apImagens.length ? `${apImagens.length} imagem(ns) prontas (${kb} KB). Cada uma vira um slide, na ordem acima. Dê o nome e envie.` : 'Nenhuma imagem lida.';
   const t = document.getElementById('apTexto'); t.value = ''; t.placeholder = 'Envio de imagens: não precisa de texto.';
-  document.getElementById('apEnviar').textContent = 'Publicar slides';
+  document.getElementById('apEnviar').textContent = 'Publicar as imagens como estão';
+  if (!document.getElementById('apMontar')) { const b2 = document.createElement('button'); b2.className = 'btn ghost'; b2.id = 'apMontar'; b2.textContent = 'Montar no padrão PIBN (robô lê o texto das imagens)'; b2.onclick = () => pedirApresentacao(true); document.getElementById('apEnviar').before(b2); }
 }
 function imagemParaSlide(f){
   return new Promise((ok, erro) => {
@@ -831,10 +832,13 @@ function imagemParaSlide(f){
     img.onerror = () => erro(new Error('não abriu a imagem')); img.src = url;
   });
 }
-async function publicarImagens(titulo, data){
+async function publicarImagens(titulo, data, lerTexto){
   const st = document.getElementById('apStatus'); const cab = Object.assign({ 'Content-Type':'application/json' }, authHeaders());
   const LOTE = 5;                                                  // ~5 imagens por envio (limite de 4,5 MB por chamada na Vercel)
-  let r = await fetch('/api/telao', { method:'POST', headers: cab, body: JSON.stringify({ acao:'salvar', apresentacao: { titulo, data, tipo:'imagens', slides: apImagens.slice(0, LOTE) } }) });
+  const fs = [...document.getElementById('apArquivo').files].map(f => f.name).join(', ');
+  // lerTexto: vira pedido "aguardando" com as imagens guardadas; o robô do computador lê o texto delas e monta no padrão
+  const corpo = lerTexto ? { acao:'pedir', titulo, data, texto:'', arquivo: fs, slides: apImagens.slice(0, LOTE) } : { acao:'salvar', apresentacao: { titulo, data, tipo:'imagens', slides: apImagens.slice(0, LOTE) } };
+  let r = await fetch('/api/telao', { method:'POST', headers: cab, body: JSON.stringify(corpo) });
   if (!r.ok) throw new Error('servidor respondeu ' + r.status); const id = (await r.json()).id;
   for (let i = LOTE; i < apImagens.length; i += LOTE) {
     st.textContent = `Enviando slides ${i + 1} a ${Math.min(i + LOTE, apImagens.length)} de ${apImagens.length}...`;
@@ -862,12 +866,12 @@ async function lerTextoDoArquivo(f){
   }
   throw new Error('formato não suportado (use PDF, .docx, .txt ou .md)');
 }
-async function pedirApresentacao(){
+async function pedirApresentacao(lerTexto){
   const titulo = document.getElementById('apTitulo').value.trim(), data = document.getElementById('apData').value, texto = document.getElementById('apTexto').value;
   const st = document.getElementById('apStatus'); if (!titulo) { st.textContent = 'Dê um nome.'; return; }
   if (apImagens.length) {
     document.getElementById('apEnviar').disabled = true; st.textContent = 'Enviando...';
-    try { await publicarImagens(titulo, data); apImagens = []; document.getElementById('ovApres').remove(); renderAssembleia(); }
+    try { await publicarImagens(titulo, data, !!lerTexto); apImagens = []; document.getElementById('ovApres').remove(); renderAssembleia(); }
     catch (e) { st.textContent = 'Não deu: ' + (e.message || e); document.getElementById('apEnviar').disabled = false; }
     return;
   }
