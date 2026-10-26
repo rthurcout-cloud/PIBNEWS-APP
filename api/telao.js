@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
     }
     if (b.acao === 'pedir') {
       const titulo = limpar(b.titulo); if (!titulo) { res.status(400).json({ error: 'sem_titulo' }); return; }
-      const texto = String(b.texto || '').slice(0, 300000);           // texto extraído do arquivo (até ~300 KB)
+      const texto = String(b.texto || '').slice(0, 900000);           // texto extraído dos arquivos (até ~900 KB; o KV aceita 1 MB por chave)
       if (!texto.trim()) { res.status(400).json({ error: 'sem_texto' }); return; }
       const a = { id: novoId(), titulo, data: limpar(b.data), status: 'aguardando', slides: [], texto, arquivo: limpar(b.arquivo), criado: new Date().toISOString() };
       await kv(['SET', K.apres + a.id, JSON.stringify(a)]); await kv(['SET', K.atual + a.id, '0']); await atualizarLista(a);

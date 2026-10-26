@@ -773,17 +773,33 @@ function novaApresentacao(){
   ov.innerHTML = `<div class="modal"><h2>Nova apresentação</h2>
     <div class="field"><label>Nome</label><input id="apTitulo" type="text" placeholder="Ex.: Assembleia 25/10/2026 · Movimentação de membros"></div>
     <div class="field"><label>Data</label><input id="apData" type="date" value="${hoje}"></div>
-    <div class="field"><label>Arquivo com o conteúdo (PDF, Word .docx, .txt ou .md)</label><input id="apArquivo" type="file" accept=".pdf,.docx,.txt,.md,text/plain,application/pdf"></div>
+    <div class="field"><label>Arquivos com o conteúdo (PDF, Word .docx, .txt ou .md). Pode escolher vários de uma vez: cada arquivo vira uma parte do relatório.</label><input id="apArquivo" type="file" multiple accept=".pdf,.docx,.txt,.md,text/plain,application/pdf"><div class="when" id="apLista"></div></div>
     <div class="field"><label>Ou cole o texto aqui</label><textarea id="apTexto" rows="8" placeholder="Os tópicos destacados do documento viram os slides."></textarea></div>
     <div class="when" id="apStatus"></div>
     <div class="modal-actions"><button class="btn ghost" onclick="document.getElementById('ovApres').remove()">Cancelar</button><button class="btn" id="apEnviar" onclick="pedirApresentacao()">Enviar pra montagem</button></div>
   </div>`;
   document.body.appendChild(ov);
-  document.getElementById('apArquivo').onchange = async e => {
-    const f = e.target.files[0]; if (!f) return; const st = document.getElementById('apStatus'); st.textContent = 'Lendo ' + f.name + '...';
-    try { const t = await lerTextoDoArquivo(f); document.getElementById('apTexto').value = t; st.textContent = t.trim() ? 'Texto lido: ' + t.length + ' caracteres. Confira abaixo e envie.' : 'Não achei texto nesse arquivo (é imagem escaneada?). Cole o texto no campo.'; if (!document.getElementById('apTitulo').value) document.getElementById('apTitulo').value = f.name.replace(/\.[^.]+$/, ''); }
-    catch (err) { st.textContent = 'Não consegui ler o arquivo: ' + (err.message || err); }
-  };
+  document.getElementById('apArquivo').onchange = async e => lerArquivosApres([...e.target.files]);
+  // arrastar arquivos pra cima da janela também funciona
+  const md = ov.querySelector('.modal');
+  md.addEventListener('dragover', e => { e.preventDefault(); md.style.outline = '2px dashed var(--accent)'; });
+  md.addEventListener('dragleave', () => { md.style.outline = ''; });
+  md.addEventListener('drop', e => { e.preventDefault(); md.style.outline = ''; lerArquivosApres([...e.dataTransfer.files]); });
+}
+// lê vários arquivos de uma vez; cada um vira uma parte do texto, com o nome do arquivo como título da parte
+async function lerArquivosApres(arqs){
+  arqs = arqs.filter(a => /\.(pdf|docx|txt|md)$/i.test(a.name)); if (!arqs.length) return;
+  const st = document.getElementById('apStatus'), lista = document.getElementById('apLista'), area = document.getElementById('apTexto');
+  const partes = []; const linhas = [];
+  for (let i = 0; i < arqs.length; i++) {
+    const f = arqs[i]; st.textContent = `Lendo ${i + 1} de ${arqs.length}: ${f.name}...`;
+    try { const t = (await lerTextoDoArquivo(f)).trim(); if (t) { partes.push('===== ' + f.name.replace(/\.[^.]+$/, '') + ' =====\n' + t); linhas.push('✓ ' + f.name + ' (' + t.length + ' caracteres)'); } else linhas.push('✗ ' + f.name + ': sem texto (imagem escaneada?)'); }
+    catch (err) { linhas.push('✗ ' + f.name + ': ' + (err.message || err)); }
+  }
+  const antes = area.value.trim(); area.value = (antes ? antes + '\n\n' : '') + partes.join('\n\n');
+  lista.innerHTML = linhas.map(esc).join('<br>');
+  st.textContent = partes.length ? `${partes.length} arquivo(s) lido(s), ${area.value.length} caracteres no total. Confira e envie.` : 'Nenhum texto lido.';
+  if (!document.getElementById('apTitulo').value && arqs.length === 1) document.getElementById('apTitulo').value = arqs[0].name.replace(/\.[^.]+$/, '');
 }
 function carregarScript(src){ return new Promise((ok, erro) => { if (document.querySelector(`script[src="${src}"]`)) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => erro(new Error('falha ao carregar ' + src)); document.head.appendChild(s); }); }
 async function lerTextoDoArquivo(f){
@@ -807,9 +823,9 @@ async function lerTextoDoArquivo(f){
 async function pedirApresentacao(){
   const titulo = document.getElementById('apTitulo').value.trim(), data = document.getElementById('apData').value, texto = document.getElementById('apTexto').value;
   const st = document.getElementById('apStatus'); if (!titulo) { st.textContent = 'Dê um nome.'; return; } if (!texto.trim()) { st.textContent = 'Falta o texto (arquivo ou colado).'; return; }
-  const f = document.getElementById('apArquivo').files[0]; document.getElementById('apEnviar').disabled = true; st.textContent = 'Enviando...';
+  const fs = [...document.getElementById('apArquivo').files]; document.getElementById('apEnviar').disabled = true; st.textContent = 'Enviando...';
   try {
-    const r = await fetch('/api/telao', { method:'POST', headers: Object.assign({ 'Content-Type':'application/json' }, authHeaders()), body: JSON.stringify({ acao:'pedir', titulo, data, texto, arquivo: f ? f.name : '' }) });
+    const r = await fetch('/api/telao', { method:'POST', headers: Object.assign({ 'Content-Type':'application/json' }, authHeaders()), body: JSON.stringify({ acao:'pedir', titulo, data, texto, arquivo: fs.map(f => f.name).join(', ') }) });
     if (!r.ok) throw new Error('servidor respondeu ' + r.status);
     document.getElementById('ovApres').remove(); renderAssembleia();
   } catch (e) { st.textContent = 'Não deu: ' + (e.message || e); document.getElementById('apEnviar').disabled = false; }
