@@ -20,13 +20,13 @@
 .slide .cab .total{ position:absolute; left:0; top:100%; margin-top:40px; white-space:nowrap; color:#1F3A5F; font-weight:800; font-size:34px; letter-spacing:2px; }
 .slide .lista{ position:absolute; left:120px; right:120px; top:470px; color:#1F3A5F; }
 .slide .lista.duas{ columns:2; column-gap:80px; }
-.slide .lista.duas .item{ padding:10px 0; }
-.slide .lista.duas .item .nome{ font-size:35px; }
-.slide .lista.duas .item .de{ font-size:23px; }
+.slide .lista.duas .item{ padding:8px 0; }
+.slide .lista.duas .item .nome{ font-size:36px; }
+.slide .lista.duas .item .de{ font-size:28px; }
 .slide .item{ break-inside:avoid; display:flex; align-items:baseline; gap:22px; padding:12px 0 12px; border-bottom:2px solid rgba(31,58,95,.18); }
 .slide .item .n{ font-weight:900; font-size:30px; min-width:52px; color:#fff; background:#1F3A5F; border-radius:10px; text-align:center; padding:4px 0; line-height:1; align-self:center; }
-.slide .item .nome{ font-weight:800; font-size:38px; line-height:1.1; }
-.slide .item .de{ display:block; font-weight:500; font-size:26px; margin-top:4px; color:#2F4E78; }
+.slide .item .nome{ font-weight:800; font-size:40px; line-height:1.1; }
+.slide .item .de{ display:block; font-weight:500; font-size:30px; margin-top:4px; color:#2F4E78; }
 .slide .lista.grande .item{ padding:20px 0; }
 .slide .lista.grande .item .nome{ font-size:52px; }
 .slide .lista.grande .item .n{ font-size:36px; min-width:64px; }
@@ -48,6 +48,17 @@
 .slide .resumo{ position:absolute; left:120px; right:120px; top:790px; display:flex; gap:28px; color:#1F3A5F; font-weight:700; font-size:30px; text-transform:uppercase; letter-spacing:1px; }
 .slide .resumo span{ background:rgba(255,255,255,.45); border-radius:16px; padding:16px 26px; }
 .slide .resumo span b{ font-weight:900; font-size:40px; margin-right:8px; }
+/* tabela (séries por mês, realizado x orçado): todos os meses num slide só. c2/c3/c4 = número de colunas; compacta = 10 a 12 linhas */
+.slide .tabela{ position:absolute; left:120px; right:120px; top:440px; color:#1F3A5F; }
+.slide .tabela .lin{ display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:24px; padding:9px 0; border-bottom:2px solid rgba(31,58,95,.18); font-size:34px; font-weight:700; align-items:baseline; }
+.slide .tabela.c2 .lin{ grid-template-columns:1.4fr 1fr; }
+.slide .tabela.c4 .lin{ grid-template-columns:1.4fr 1fr 1fr 1fr; }
+.slide .tabela .lin span:not(:first-child){ text-align:right; font-variant-numeric:tabular-nums; }
+.slide .tabela .lin.cab{ font-size:24px; letter-spacing:2px; text-transform:uppercase; color:#2F4E78; font-weight:800; border-bottom:3px solid #1F3A5F; padding:0 0 8px; }
+.slide .tabela .lin.total{ font-weight:900; border-bottom:0; border-top:3px solid #1F3A5F; margin-top:4px; }
+.slide .tabela.compacta{ top:420px; }
+.slide .tabela.compacta .lin{ font-size:28px; padding:4px 0; }
+.slide .tabela .obs{ margin-top:14px; font-size:24px; color:#2F4E78; font-weight:500; }
 /* slide feito de imagem (JPG/PNG exportado do PowerPoint): a imagem ocupa o quadro inteiro */
 .slide .img-slide{ position:absolute; inset:0; background:#0b1220; }
 .slide .img-slide img{ width:100%; height:100%; object-fit:contain; display:block; }
