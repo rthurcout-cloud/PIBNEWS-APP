@@ -23,7 +23,7 @@
 .slide .lista.duas .item{ padding:8px 0; }
 .slide .lista.duas .item .nome{ font-size:36px; }
 .slide .lista.duas .item .de{ font-size:28px; }
-.slide .item{ break-inside:avoid; display:flex; align-items:baseline; gap:22px; padding:12px 0 12px; border-bottom:2px solid rgba(31,58,95,.18); }
+.slide .item{ break-inside:avoid; display:flex; align-items:baseline; gap:22px; padding:10px 0 10px; border-bottom:2px solid rgba(31,58,95,.18); }
 .slide .item .n{ font-weight:900; font-size:30px; min-width:52px; color:#fff; background:#1F3A5F; border-radius:10px; text-align:center; padding:4px 0; line-height:1; align-self:center; }
 .slide .item .nome{ font-weight:800; font-size:40px; line-height:1.1; }
 .slide .item .de{ display:block; font-weight:500; font-size:30px; margin-top:4px; color:#2F4E78; }
@@ -54,7 +54,7 @@
 .slide .tabela.c2 .lin{ grid-template-columns:1.4fr 1fr; }
 .slide .tabela.c4 .lin{ grid-template-columns:1.4fr 1fr 1fr 1fr; }
 .slide .tabela .lin span:not(:first-child){ text-align:right; font-variant-numeric:tabular-nums; }
-.slide .tabela .lin.cab{ font-size:24px; letter-spacing:2px; text-transform:uppercase; color:#2F4E78; font-weight:800; border-bottom:3px solid #1F3A5F; padding:0 0 8px; }
+.slide .tabela .lin.titulo{ font-size:24px; letter-spacing:2px; text-transform:uppercase; color:#2F4E78; font-weight:800; border-bottom:3px solid #1F3A5F; padding:0 0 8px; }
 .slide .tabela .lin.total{ font-weight:900; border-bottom:0; border-top:3px solid #1F3A5F; margin-top:4px; }
 .slide .tabela.compacta{ top:420px; }
 .slide .tabela.compacta .lin{ font-size:28px; padding:4px 0; }
