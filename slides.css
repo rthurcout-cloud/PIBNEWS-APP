@@ -57,7 +57,9 @@
 .slide .tabela .lin.titulo{ font-size:24px; letter-spacing:2px; text-transform:uppercase; color:#2F4E78; font-weight:800; border-bottom:3px solid #1F3A5F; padding:0 0 8px; }
 .slide .tabela .lin.total{ font-weight:900; border-bottom:0; border-top:3px solid #1F3A5F; margin-top:4px; }
 .slide .tabela.compacta{ top:420px; }
-.slide .tabela.compacta .lin{ font-size:27px; padding:3px 0; }
+.slide .tabela.compacta .lin{ font-size:32px; padding:5px 0; }
+.slide .tabela.minima{ top:420px; }
+.slide .tabela.minima .lin{ font-size:27px; padding:3px 0; }
 .slide .tabela .obs{ margin-top:14px; font-size:24px; color:#2F4E78; font-weight:500; }
 /* slide feito de imagem (JPG/PNG exportado do PowerPoint): a imagem ocupa o quadro inteiro */
 .slide .img-slide{ position:absolute; inset:0; background:#0b1220; }
