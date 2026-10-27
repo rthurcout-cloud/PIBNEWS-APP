@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Baixar · Sistema PIBN</title>
+<!-- Baixar uma apresentação (?id=...) pro computador: PDF (um slide por página, pelo "Salvar como PDF" do Chrome, que desenha os slides perfeitos) ou ZIP com as imagens. 27/10/2026. -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@125,300;125,500;125,700;125,800;125,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="slides.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{ --bg:#0b1220; --card:#121c33; --line:#263556; --txt:#e8eefc; --muted:#8aa4c8; --accent:#a9c4f0; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:var(--bg); color:var(--txt); font-family:'Archivo',system-ui,sans-serif; }
+  #topo{ padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; position:sticky; top:0; background:var(--bg); z-index:2; border-bottom:1px solid var(--line); }
+  #topo h1{ font-size:16px; margin:0; font-weight:800; }
+  #topo small{ display:block; color:var(--muted); font-weight:500; font-size:12px; margin-top:2px; }
+  #topo .bt{ display:flex; gap:8px; flex-wrap:wrap; }
+  button{ font:inherit; font-weight:700; font-size:14px; color:#0b1220; background:var(--accent); border:0; border-radius:12px; padding:11px 16px; cursor:pointer; }
+  button.ghost{ background:var(--card); color:var(--txt); border:1px solid var(--line); }
+  button:disabled{ opacity:.5; cursor:default; }
+  #dica{ padding:10px 18px; color:var(--muted); font-size:13px; line-height:1.5; }
+  #lista{ padding:0 18px 30px; display:flex; flex-direction:column; gap:14px; max-width:1200px; margin:0 auto; }
+  .mini{ width:100%; aspect-ratio:16/9; overflow:hidden; border-radius:10px; background:#BBD0ED; position:relative; border:1px solid var(--line); }
+  .mini .slide{ position:absolute; left:0; top:0; transform-origin:0 0; pointer-events:none; }
+  #aviso{ margin:18px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; color:var(--muted); }
+  /* impressão: cada slide é uma página 1920x1080, sem margem, cores de fundo preservadas */
+  @media print {
+    @page{ size:1920px 1080px; margin:0; }
+    html,body{ background:#fff; }
+    #topo, #dica, #aviso{ display:none !important; }
+    #lista{ padding:0; gap:0; max-width:none; display:block; }
+    .mini{ width:1920px; height:1080px; aspect-ratio:auto; border:0; border-radius:0; overflow:hidden; page-break-after:always; break-after:page; }
+    .mini .slide{ transform:none !important; }
+    .slide, .slide *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+</head>
+<body>
+<div id="topo"><div><h1 id="titulo">Baixar apresentação</h1><small id="sub">Carregando...</small></div><div class="bt"><button id="btPdf" disabled>Baixar PDF</button><button id="btZip" class="ghost" disabled>Baixar imagens (ZIP)</button></div></div>
+<div id="dica"><b>PDF:</b> abre a janela de impressão do Chrome já com um slide por página; escolha <b>Salvar como PDF</b> e o destino. <b>ZIP:</b> baixa um arquivo com os slides em imagem (nas apresentações feitas de imagens). Guarde na pasta da assembleia no computador.</div>
+<div id="aviso" hidden></div>
+<div id="lista"></div>
+<script>
+const $ = id => document.getElementById(id);
+const id = new URLSearchParams(location.search).get('id') || '';
+let apres = null;
+const nomeArquivo = t => (t || 'apresentacao').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\s-]+/g, '').trim().replace(/\s+/g, '-').slice(0, 80);
+function pintar(){
+  const w = Math.min(1200, document.body.clientWidth - 36);
+  $('lista').innerHTML = apres.slides.map(h => `<div class="mini"><section class="slide${h.includes('capa-marca') ? ' capa' : ''}" style="transform:scale(${(w / 1920).toFixed(4)})">${h}</section></div>`).join('');
+}
+function baixarBlob(blob, nome){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
+async function baixarZip(){
+  $('btZip').disabled = true; $('btZip').textContent = 'Montando o ZIP...';
+  const zip = new JSZip(); let n = 0;
+  apres.slides.forEach((h, i) => { const m = h.match(/src="data:image\/(\w+);base64,([^"]+)"/); if (m) { zip.file(`slide-${String(i + 1).padStart(2, '0')}.${m[1] === 'jpeg' ? 'jpg' : m[1]}`, m[2], { base64: true }); n++; } });
+  if (!n) { $('btZip').textContent = 'Sem imagens nesta apresentação'; return; }
+  baixarBlob(await zip.generateAsync({ type: 'blob' }), nomeArquivo(apres.titulo) + '.zip'); $('btZip').disabled = false; $('btZip').textContent = 'Baixar imagens (ZIP)';
+}
+async function carregar(){
+  if (!id) { $('aviso').hidden = false; $('aviso').textContent = 'Falta o id da apresentação. Abra pelo botão "Baixar" na lista de apresentações.'; $('sub').textContent = ''; return; }
+  let r; try { r = await fetch('/api/telao?id=' + encodeURIComponent(id)); } catch (e) { $('sub').textContent = 'Sem conexão.'; return; }
+  if (!r.ok) { $('aviso').hidden = false; $('aviso').textContent = 'Apresentação não encontrada.'; $('sub').textContent = ''; return; }
+  apres = (await r.json()).apresentacao; $('titulo').textContent = apres.titulo; document.title = 'Baixar · ' + apres.titulo;
+  if (apres.status !== 'pronta' || !apres.slides.length) { $('aviso').hidden = false; $('aviso').textContent = 'Essa apresentação ainda não está pronta.'; $('sub').textContent = ''; return; }
+  $('sub').textContent = apres.slides.length + ' slides · ' + (apres.data ? apres.data.split('-').reverse().join('/') : '');
+  pintar(); await document.fonts.ready;
+  $('btPdf').disabled = false; $('btPdf').onclick = () => { pintar(); setTimeout(() => window.print(), 150); };
+  const temImg = apres.slides.some(h => /src="data:image\//.test(h)); $('btZip').disabled = !temImg; if (!temImg) $('btZip').title = 'Esta apresentação é de slides montados (texto); use o PDF.'; $('btZip').onclick = baixarZip;
+}
+addEventListener('resize', () => apres && pintar());
+carregar();
+</script>
+</body>
+</html>

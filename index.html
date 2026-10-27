@@ -762,7 +762,7 @@ async function renderAssembleia(){
     return `<div class="card"><div class="title">${esc(a.titulo)} ${st}</div><div class="when">${dt ? dt + ' · ' : ''}criada em ${dmy((a.criado||'').slice(0,10))}${a.montado ? ' · montada em ' + dmy(a.montado.slice(0,10)) : ''}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
         ${a.aviso ? `<div class="when" style="width:100%">${esc(a.aviso)}</div>` : ''}
-        ${pronta ? `<a class="btn" href="previa.html?id=${a.id}" target="_blank">Prévia</a><a class="btn" href="telao.html?id=${a.id}" target="_blank">Telão</a><a class="btn" href="controle.html?id=${a.id}" target="_blank">Controle</a>` : `<span class="when">O computador do Arthur monta os slides a partir do texto (a cada 10 min, com o PC ligado). Quando ficar pronta, os botões Prévia, Telão e Controle aparecem aqui.</span>`}
+        ${pronta ? `<a class="btn" href="previa.html?id=${a.id}" target="_blank">Prévia</a><a class="btn" href="telao.html?id=${a.id}" target="_blank">Telão</a><a class="btn" href="controle.html?id=${a.id}" target="_blank">Controle</a><a class="btn ghost" href="baixar.html?id=${a.id}" target="_blank" title="PDF ou imagens pra guardar no computador">Baixar</a>` : `<span class="when">O computador do Arthur monta os slides a partir do texto (a cada 10 min, com o PC ligado). Quando ficar pronta, os botões Prévia, Telão, Controle e Baixar aparecem aqui.</span>`}
         ${pronta && a.tipo === 'imagens' ? `<button class="btn ghost" onclick="converterApresentacao('${a.id}')">Montar no padrão PIBN</button>` : ''}
         <button class="btn ghost" onclick="apagarApresentacao('${a.id}', '${esc(a.titulo).replace(/'/g, "\\'")}')">Apagar</button>
       </div></div>`;
