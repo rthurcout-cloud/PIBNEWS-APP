@@ -705,10 +705,11 @@ async function enviarAoServidor() {
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(db)
     });
-    setSync(r.ok ? 'ok' : 'erro');
-  } catch (e) { setSync('off'); }
+    if (r.ok) setSync('ok');
+    else { setSync('erro'); pendente = true; }          // não deu: segura o que está na tela e tenta de novo
+  } catch (e) { setSync('off'); pendente = true; }
   enviando = false;
-  if (pendente) enviarAoServidor();
+  if (pendente) { clearTimeout(pushTimer); pushTimer = setTimeout(enviarAoServidor, 4000); }
 }
 
 async function sincronizarBaixar() {
@@ -719,6 +720,9 @@ async function sincronizarBaixar() {
   catch (e) { setSync('off'); return; }
   if (!r.ok) { return; }
   const novo = normalize(await r.json());
+  // 05/11/2026: se mexeram no app enquanto essa leitura rodava (ex.: colou um link), o que está na tela manda;
+  // antes a leitura atrasada apagava o culto recém-enviado e ele só aparecia na segunda tentativa
+  if (enviando || pendente) return;
   if (JSON.stringify(novo) !== JSON.stringify(db)) {
     db = novo;
     renderTudo();
@@ -1394,6 +1398,7 @@ function enviarCulto(){
   db.cultos.push({ id:'cu' + uid(), link, yt:id, status:'aguardando', criado:new Date().toISOString().slice(0,10) });
   inp.value = '';
   save(); renderCortes();
+  clearTimeout(pushTimer); enviarAoServidor();   // grava na hora, sem esperar o atraso de 600 ms
 }
 function removerCulto(id){
   if (!confirm('Remover esse culto da lista?')) return;
